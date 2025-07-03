@@ -8,1374 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts - Inter for a clean, modern look -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Supabase SDK -->
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-        // Le tue credenziali Supabase
-        const SUPABASE_URL = 'https://fyncjiafbsmsjrfxtqyg.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5bmNqaWFmYnNtc2pyZnh0cXlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NTYxMzYsImV4cCI6MjA2NzEzMjEzNn0.fGkL6NPd6TNeo0zuC4VY8kJ79HNMWD9G8XVVbQrhEWo';
-
-        // Inizializza il client Supabase
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log("Supabase client initialized:", supabase); // Debug: Conferma l'inizializzazione di Supabase
-
-        let currentUserId = null;
-        let isAuthReady = false;
-        let currentlyVisiblePasswordInputId = null; // Variabile per tracciare la password attualmente visibile
-
-        // Emoji per il tema
-        const SUN_EMOJI = "☀️"; // Emoji Sole
-        const MOON_EMOJI = "🌙"; // Emoji Luna
-
-        // API Key per Gemini (fornita dall'utente)
-        const GEMINI_API_KEY = "AIzaSyALFtbRCGyMnld9-YHHkQsqeahcp2TQmUQ";
-        let chatHistory = []; // Per memorizzare la cronologia della chat per l'assistente AI
-        let selectedChatbotLanguage = 'en'; // Lingua predefinita per le risposte del chatbot
-
-        // SVG Icons for password visibility
-        const EYE_OPEN_SVG = `
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-        `;
-        const EYE_CLOSED_SVG = `
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.21-3.6l-1.39-1.39A1.003 1.003 0 0 0 1.29 5.29L2.71 3.87a1.003 1.003 0 0 0-1.42-1.42L.29 2.45a1.003 1.003 0 0 0 1.42 1.42L2.71 3.87a1.003 1.003 0 0 0 1.42 1.42zM12 9.5a2.5 2.5 0 0 0 0 5 2.5 2.5 0 0 0 0-5z"></path>
-                <path d="M1 1l22 22"></path>
-            </svg>
-        `;
-
-
-        // Oggetto delle traduzioni
-        const translations = {
-            en: {
-                appName: "AboutMe",
-                landing_welcome: "Welcome to AboutMe!",
-                landing_description: "Create your personal page, share your links, and showcase your merchandise. Sign in to get started!",
-                landing_signin_button: "Sign In / Register",
-                dashboard_title: "Your AboutMe Pages",
-                dashboard_no_pages: "You haven't created any pages yet.",
-                dashboard_create_new: "Create New AboutMe Page",
-                dashboard_view: "View",
-                dashboard_edit: "Edit",
-                dashboard_delete: "Delete",
-                dashboard_copy_link: "Copy Link",
-                dashboard_link_copied: "Link copied!",
-                create_edit_title_create: "Create New AboutMe Page",
-                create_edit_title_edit: "Edit AboutMe Page",
-                form_name: "Your Name:",
-                form_tagline: "Your Tagline:",
-                form_about_me: "About Me Description:",
-                form_profile_img: "Profile Image URL:",
-                form_profile_img_upload: "Drag & Drop or Click to Upload Profile Image",
-                form_links_title: "Links (Name, URL):",
-                form_add_link: "Add Link",
-                form_merch_title: "Merchandise (Name, Description, Image URL, Price, Buy Link):",
-                form_add_merch: "Add Merch Item",
-                form_save_button: "Save Page",
-                form_cancel_button: "Cancel",
-                about_me_page_title: "AboutMe Page",
-                name: "Your Name Here",
-                tagline: "Creative | Developer | Enthusiast",
-                about_me_description: "Welcome to my personal space! I'm passionate about creating engaging digital experiences and sharing my journey. Here you'll find everything about me, my projects, and how to connect.",
-                links_title: "My Links",
-                link_portfolio: "Portfolio",
-                link_github: "GitHub",
-                link_linkedin: "LinkedIn",
-                link_twitter: "Twitter",
-                merch_title: "My Merch",
-                merch_item_1_name: "Cool T-Shirt",
-                merch_item_1_desc: "Comfortable and stylish, perfect for any occasion.",
-                merch_item_2_name: "Awesome Mug",
-                merch_item_2_desc: "Start your day with a sip of inspiration.",
-                merch_item_3_name: "Cozy Hoodie",
-                merch_item_3_desc: "Stay warm and show your support.",
-                merch_buy_now: "Buy Now",
-                settings_title: "Settings", // This will be removed, but kept for consistency in translations object
-                select_language: "Select Language:", // This will be removed, but kept for consistency in translations object
-                gradient_color_1: "Gradient Color 1:", // This will be removed, but kept for consistency in translations object
-                gradient_color_2: "Gradient Color 2:", // This will be removed, but kept for consistency in translations object
-                gradient_direction: "Gradient Direction (deg):", // This will be removed, but kept for consistency in translations object
-                error_loading_page: "Error loading page: ",
-                error_saving_page: "Error saving page: ",
-                error_deleting_page: "Error deleting page: ",
-                confirm_delete: "Are you sure you want to delete this page?",
-                message_box_ok: "OK",
-                message_box_cancel: "Cancel",
-                auth_modal_title_login: "Login to AboutMe",
-                auth_modal_title_register: "Register for AboutMe",
-                auth_modal_title_forgot: "Reset Password",
-                auth_email: "Email:",
-                auth_password: "Password:",
-                auth_show_password: "Show Password",
-                auth_confirm_password: "Confirm Password:",
-                auth_passwords_match: "Passwords match!",
-                auth_passwords_no_match: "Passwords do not match!",
-                auth_login_button: "Login",
-                auth_register_button: "Register",
-                auth_forgot_password: "Forgot Password?",
-                auth_go_to_register: "Don't have an account? Register",
-                auth_go_to_login: "Already have an account? Login",
-                auth_reset_password_button: "Send Reset Email",
-                auth_reset_email_sent: "Password reset email sent! Check your inbox.",
-                auth_error_login: "Login failed: ",
-                auth_error_register: "Registration failed: ",
-                auth_error_reset: "Password reset failed: ",
-                logout_button: "Logout",
-                theme_toggle_label: "Toggle Theme",
-                upload_success: "Image uploaded successfully!",
-                upload_error: "Image upload failed: ",
-                chatbot_title: "AboutMe AI Assistant",
-                chatbot_input_placeholder: "Type your message...",
-                chatbot_send: "Send"
-            },
-            it: {
-                appName: "AboutMe",
-                landing_welcome: "Benvenuto su AboutMe!",
-                landing_description: "Crea la tua pagina personale, condividi i tuoi link e mostra il tuo merchandising. Accedi per iniziare!",
-                landing_signin_button: "Accedi / Registrati",
-                dashboard_title: "Le Tue Pagine AboutMe",
-                dashboard_no_pages: "Non hai ancora creato nessuna pagina.",
-                dashboard_create_new: "Crea Nuova Pagina AboutMe",
-                dashboard_view: "Visualizza",
-                dashboard_edit: "Modifica",
-                dashboard_delete: "Elimina",
-                dashboard_copy_link: "Copia Link",
-                dashboard_link_copied: "Link copiato!",
-                create_edit_title_create: "Crea Nuova Pagina AboutMe",
-                create_edit_title_edit: "Modifica Pagina AboutMe",
-                form_name: "Il Tuo Nome:",
-                form_tagline: "La Tua Tagline:",
-                form_about_me: "Descrizione About Me:",
-                form_profile_img: "URL Immagine Profilo:",
-                form_profile_img_upload: "Trascina & Rilascia o Clicca per Caricare Immagine Profilo",
-                form_links_title: "Link (Nome, URL):",
-                form_add_link: "Aggiungi Link",
-                form_merch_title: "Merchandise (Nome, Descrizione, URL Immagine, Prezzo, Link Acquisto):",
-                form_add_merch: "Aggiungi Articolo Merch",
-                form_save_button: "Salva Pagina",
-                form_cancel_button: "Annulla",
-                about_me_page_title: "Pagina AboutMe",
-                name: "Il Tuo Nome Qui",
-                tagline: "Creativo | Sviluppatore | Appassionato",
-                about_me_description: "Benvenuto nel mio spazio personale! Sono appassionato di creare esperienze digitali coinvolgenti e di condividere il mio percorso. Qui troverai tutto su di me, i miei progetti e come connetterti.",
-                links_title: "I Miei Link",
-                link_portfolio: "Portfolio",
-                link_github: "GitHub",
-                link_linkedin: "LinkedIn",
-                link_twitter: "Twitter",
-                merch_title: "Il Mio Merch",
-                merch_item_1_name: "T-Shirt Fantastica",
-                merch_item_1_desc: "Comoda ed elegante, perfetta per ogni occasione.",
-                merch_item_2_name: "Tazza Eccezionale",
-                merch_item_2_desc: "Inizia la giornata con un sorso di ispirazione.",
-                merch_item_3_name: "Felpa Comoda",
-                merch_item_3_desc: "Rimani al caldo e mostra il tuo supporto.",
-                merch_buy_now: "Acquista Ora",
-                settings_title: "Impostazioni",
-                select_language: "Seleziona Lingua:",
-                gradient_color_1: "Colore Gradiente 1:",
-                gradient_color_2: "Colore Gradiente 2:",
-                gradient_direction: "Direzione Gradiente (gradi):",
-                error_loading_page: "Errore durante il caricamento della pagina: ",
-                error_saving_page: "Errore durante il salvataggio della pagina: ",
-                error_deleting_page: "Errore durante l'eliminazione della pagina: ",
-                confirm_delete: "Sei sicuro di voler eliminare questa pagina?",
-                message_box_ok: "OK",
-                message_box_cancel: "Annulla",
-                auth_modal_title_login: "Accedi ad AboutMe",
-                auth_modal_title_register: "Registrati ad AboutMe",
-                auth_modal_title_forgot: "Reimposta Password",
-                auth_email: "Email:",
-                auth_password: "Password:",
-                auth_show_password: "Mostra Password",
-                auth_confirm_password: "Conferma Password:",
-                auth_passwords_match: "Le password corrispondono!",
-                auth_passwords_no_match: "Le password non corrispondono!",
-                auth_login_button: "Accedi",
-                auth_register_button: "Registrati",
-                auth_forgot_password: "Password Dimenticata?",
-                auth_go_to_register: "Non hai un account? Registrati",
-                auth_go_to_login: "Hai già un account? Accedi",
-                auth_reset_password_button: "Invia Email di Reimpostazione",
-                auth_reset_email_sent: "Email di reimpostazione password inviata! Controlla la tua casella di posta.",
-                auth_error_login: "Accesso fallito: ",
-                auth_error_register: "Registrazione fallita: ",
-                auth_error_reset: "Reimpostazione password fallita: ",
-                logout_button: "Esci",
-                theme_toggle_label: "Cambia Tema",
-                upload_success: "Immagine caricata con successo!",
-                upload_error: "Caricamento immagine fallito: ",
-                chatbot_title: "Assistente AI AboutMe",
-                chatbot_input_placeholder: "Scrivi il tuo messaggio...",
-                chatbot_send: "Invia"
-            },
-            de: {
-                appName: "AboutMe",
-                landing_welcome: "Willkommen bei AboutMe!",
-                landing_description: "Erstellen Sie Ihre persönliche Seite, teilen Sie Ihre Links und präsentieren Sie Ihre Merchandise-Artikel. Melden Sie sich an, um loszulegen!",
-                landing_signin_button: "Anmelden / Registrieren",
-                dashboard_title: "Ihre AboutMe Seiten",
-                dashboard_no_pages: "Sie haben noch keine Seiten erstellt.",
-                dashboard_create_new: "Neue AboutMe Seite Erstellen",
-                dashboard_view: "Anzeigen",
-                dashboard_edit: "Bearbeiten",
-                dashboard_delete: "Löschen",
-                dashboard_copy_link: "Link Kopieren",
-                dashboard_link_copied: "Link kopiert!",
-                create_edit_title_create: "Neue AboutMe Seite Erstellen",
-                create_edit_title_edit: "AboutMe Seite Bearbeiten",
-                form_name: "Ihr Name:",
-                form_tagline: "Ihr Slogan:",
-                form_about_me: "Über mich Beschreibung:",
-                form_profile_img: "Profilbild-URL:",
-                form_profile_img_upload: "Ziehen & Ablegen oder Klicken zum Hochladen des Profilbildes",
-                form_links_title: "Links (Name, URL):",
-                form_add_link: "Link Hinzufügen",
-                form_merch_title: "Merchandise (Name, Beschreibung, Bild-URL, Preis, Kauflink):",
-                form_add_merch: "Merch-Artikel Hinzufügen",
-                form_save_button: "Seite Speichern",
-                form_cancel_button: "Abbrechen",
-                about_me_page_title: "AboutMe Seite",
-                name: "Dein Name Hier",
-                tagline: "Kreativ | Entwickler | Enthusiast",
-                about_me_description: "Willkommen in meinem persönlichen Bereich! Ich bin leidenschaftlich daran interessiert, ansprechende digitale Erlebnisse zu schaffen und meine Reise zu teilen. Hier finden Sie alles über mich, meine Projekte und wie Sie sich verbinden können.",
-                links_title: "Meine Links",
-                link_portfolio: "Portfolio",
-                link_github: "GitHub",
-                link_linkedin: "LinkedIn",
-                link_twitter: "Twitter",
-                merch_title: "Mein Merch",
-                merch_item_1_name: "Cooles T-Shirt",
-                merch_item_1_desc: "Bequem und stilvoll, perfekt für jeden Anlass.",
-                merch_item_2_name: "Tolle Tasse",
-                merch_item_2_desc: "Beginnen Sie Ihren Tag mit einem Schluck Inspiration.",
-                merch_item_3_name: "Gemütlicher Hoodie",
-                merch_item_3_desc: "Bleiben Sie warm und zeigen Sie Ihre Unterstützung.",
-                merch_buy_now: "Jetzt Kaufen",
-                settings_title: "Einstellungen",
-                select_language: "Sprache auswählen:",
-                gradient_color_1: "Farbverlauf Farbe 1:",
-                gradient_color_2: "Farbverlauf Farbe 2:",
-                gradient_direction: "Farbverlauf Richtung (Grad):",
-                error_loading_page: "Fehler beim Laden der Seite: ",
-                error_saving_page: "Fehler beim Speichern der Seite: ",
-                error_deleting_page: "Fehler beim Löschen der Seite: ",
-                confirm_delete: "Möchten Sie diese Seite wirklich löschen?",
-                message_box_ok: "OK",
-                message_box_cancel: "Abbrechen",
-                auth_modal_title_login: "Bei AboutMe anmelden",
-                auth_modal_title_register: "Bei AboutMe registrieren",
-                auth_modal_title_forgot: "Passwort zurücksetzen",
-                auth_email: "E-Mail:",
-                auth_password: "Passwort:",
-                auth_show_password: "Passwort anzeigen",
-                auth_confirm_password: "Passwort bestätigen:",
-                auth_passwords_match: "Passwörter stimmen überein!",
-                auth_passwords_no_match: "Passwörter stimmen nicht überein!",
-                auth_login_button: "Anmelden",
-                auth_register_button: "Registrieren",
-                auth_forgot_password: "Passwort vergessen?",
-                auth_go_to_register: "Noch kein Konto? Registrieren",
-                auth_go_to_login: "Bereits ein Konto? Anmelden",
-                auth_reset_password_button: "E-Mail zum Zurücksetzen senden",
-                auth_reset_email_sent: "Passwort-Reset-E-Mail gesendet! Überprüfen Sie Ihren Posteingang.",
-                auth_error_login: "Anmeldung fehlgeschlagen: ",
-                auth_error_register: "Registrierung fehlgeschlagen: ",
-                auth_error_reset: "Passwort-Reset fehlgeschlagen: ",
-                logout_button: "Abmelden",
-                theme_toggle_label: "Thema wechseln",
-                upload_success: "Bild erfolgreich hochgeladen!",
-                upload_error: "Bild-Upload fehlgeschlagen: ",
-                chatbot_title: "AboutMe KI-Assistent",
-                chatbot_input_placeholder: "Geben Sie Ihre Nachricht ein...",
-                chatbot_send: "Senden"
-            },
-            fr: {
-                appName: "AboutMe",
-                landing_welcome: "Bienvenue sur AboutMe !",
-                landing_description: "Créez votre page personnelle, partagez vos liens et présentez vos produits dérivés. Connectez-vous pour commencer !",
-                landing_signin_button: "Se Connecter / S'inscrire",
-                dashboard_title: "Vos Pages AboutMe",
-                dashboard_no_pages: "Vous n'avez pas encore créé de pages.",
-                dashboard_create_new: "Créer une Nouvelle Page AboutMe",
-                dashboard_view: "Afficher",
-                dashboard_edit: "Modifier",
-                dashboard_delete: "Supprimer",
-                dashboard_copy_link: "Copier le Lien",
-                dashboard_link_copied: "Lien copié !",
-                create_edit_title_create: "Créer une Nouvelle Page AboutMe",
-                create_edit_title_edit: "Modifier la Page AboutMe",
-                form_name: "Votre Nom :",
-                form_tagline: "Votre Slogan :",
-                form_about_me: "Description À Propos de Moi :",
-                form_profile_img: "URL de l'Image de Profil :",
-                form_profile_img_upload: "Glisser-déposer ou Cliquer pour Télécharger l'Image de Profil",
-                form_links_title: "Liens (Nom, URL) :",
-                form_add_link: "Ajouter un Lien",
-                form_merch_title: "Produits Dérivés (Nom, Description, URL de l'Image, Prix, Lien d'Achat) :",
-                form_add_merch: "Ajouter un Article Merch",
-                form_save_button: "Enregistrer la Page",
-                form_cancel_button: "Annuler",
-                about_me_page_title: "Page AboutMe",
-                name: "Votre Nom Ici",
-                tagline: "Créatif | Développeur | Passionné",
-                about_me_description: "Bienvenue dans mon espace personnel ! Je suis passionné par la création d'expériences numériques engageantes et le partage de mon parcours. Ici, vous trouverez tout sur moi, mes projets et comment me contacter.",
-                links_title: "Mes Liens",
-                link_portfolio: "Portfolio",
-                link_github: "GitHub",
-                link_linkedin: "LinkedIn",
-                link_twitter: "Twitter",
-                merch_title: "Mon Merch",
-                merch_item_1_name: "T-Shirt Cool",
-                merch_item_1_desc: "Confortable et élégant, parfait pour toute occasion.",
-                merch_item_2_name: "Super Tasse",
-                merch_item_2_desc: "Commencez votre journée avec une gorgée d'inspiration.",
-                merch_item_3_name: "Sweat à Capuche Confortable",
-                merch_item_3_desc: "Restez au chaud et montrez votre soutien.",
-                merch_buy_now: "Acheter Maintenant",
-                settings_title: "Paramètres",
-                select_language: "Sélectionner la langue :",
-                gradient_color_1: "Couleur du dégradé 1 :",
-                gradient_color_2: "Couleur du dégradé 2 :",
-                gradient_direction: "Direction du dégradé (degrés) :",
-                error_loading_page: "Erreur lors du chargement de la page : ",
-                error_saving_page: "Errore lors de l'enregistrement de la page : ",
-                error_deleting_page: "Errore lors de la suppression de la page : ",
-                confirm_delete: "Êtes-vous sûr de vouloir supprimer cette page ?",
-                message_box_ok: "OK",
-                message_box_cancel: "Annuler",
-                auth_modal_title_login: "Se connecter à AboutMe",
-                auth_modal_title_register: "S'inscrire à AboutMe",
-                auth_modal_title_forgot: "Réinitialiser le mot de passe",
-                auth_email: "E-mail :",
-                auth_password: "Mot de passe :",
-                auth_show_password: "Afficher le mot de passe",
-                auth_confirm_password: "Confirmer le mot de passe :",
-                auth_passwords_match: "Les mots de passe correspondent !",
-                auth_passwords_no_match: "Les mots de passe ne correspondent pas !",
-                auth_login_button: "Se connecter",
-                auth_register_button: "S'inscrire",
-                auth_forgot_password: "Mot de passe oublié ?",
-                auth_go_to_register: "Pas encore de compte ? S'inscrire",
-                auth_go_to_login: "Déjà un compte ? Se connecter",
-                auth_reset_password_button: "Envoyer l'e-mail de réinitialisation",
-                auth_reset_email_sent: "E-mail de réinitialisation du mot de passe envoyé ! Vérifiez votre boîte de réception.",
-                auth_error_login: "Échec de la connexion : ",
-                auth_error_register: "Échec de l'inscription : ",
-                auth_error_reset: "Échec de la réinitialisation du mot de passe : ",
-                logout_button: "Déconnexion",
-                theme_toggle_label: "Basculer le thème",
-                upload_success: "Image téléchargée avec succès !",
-                upload_error: "Échec du téléchargement de l'image : "
-            }
-        };
-
-        let currentLanguage = 'en'; // Lingua predefinita dell'app
-        let currentTheme = 'dark'; // Tema predefinito è scuro
-        // Rimosso la dichiarazione duplicata di chatHistory e selectedChatbotLanguage
-        // let chatHistory = []; // Per memorizzare la cronologia della chat per l'assistente AI
-        // let selectedChatbotLanguage = 'en'; // Lingua predefinita per le risposte del chatbot
-
-        // Funzione per applicare le traduzioni
-        function applyTranslations(lang) {
-            document.querySelectorAll('[data-i18n]').forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (translations[lang] && translations[lang][key]) {
-                    element.textContent = translations[lang][key];
-                }
-            });
-            // Aggiorna placeholder input chatbot
-            const chatInput = document.getElementById('chat-input');
-            if (chatInput) {
-                chatInput.placeholder = translations[lang].chatbot_input_placeholder;
-            }
-            currentLanguage = lang;
-        }
-
-        // --- Funzioni di utilità ---
-        function showPage(pageId) {
-            document.querySelectorAll('.page-section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            document.getElementById(pageId).classList.remove('hidden');
-            // Il pannello delle impostazioni è stato rimosso, quindi non c'è bisogno di gestirlo qui
-        }
-
-        function getContrastTextColor(hexColor) {
-            const r = parseInt(hexColor.substring(1, 3), 16);
-            const g = parseInt(hexColor.substring(3, 5), 16);
-            const b = parseInt(hexColor.substring(5, 7), 16);
-            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            return luminance > 0.5 ? '#333' : '#f0f0f0'; // Grigio scuro per sfondi chiari, grigio chiaro per sfondi scuri
-        }
-
-        function applyGradient(color1, color2, direction) {
-            document.body.style.background = `linear-gradient(${direction}deg, ${color1}, ${color2})`;
-            const textColor = getContrastTextColor(color1); // Usa il primo colore per la decisione del contrasto del testo
-
-            // Applica il colore del testo agli elementi all'interno dei contenitori di vetro
-            document.querySelectorAll('.glass-container h1, .glass-container h2, .glass-container h3, .glass-container p, .glass-container input, .glass-container textarea, .glass-container select').forEach(el => {
-                el.style.color = textColor;
-            });
-            // Il colore del testo dei pulsanti si adatta al tema
-            document.querySelectorAll('.link-button, .merch-button').forEach(el => {
-                el.style.color = currentTheme === 'dark' ? '#f0f0f0' : '#333';
-            });
-        }
-
-        // --- Toggle Tema ---
-        function toggleTheme() {
-            if (currentTheme === 'dark') {
-                document.body.classList.remove('dark-mode');
-                document.body.classList.add('light-mode');
-                currentTheme = 'light';
-                applyGradient('#a7bfe8', '#6190e8', 135); // Apply default light gradient
-            } else {
-                document.body.classList.remove('light-mode');
-                document.body.classList.add('dark-mode');
-                currentTheme = 'dark';
-                applyGradient('#1a202c', '#2d3748', 135); // Apply default dark gradient
-            }
-            localStorage.setItem('theme', currentTheme);
-            updateThemeIcon();
-
-            // Aggiorna la classe della modale di autenticazione per il tema
-            const authModalContent = document.querySelector('.auth-modal-content');
-            if (authModalContent) {
-                authModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
-            }
-            // Aggiorna la classe della chatbot modal per il tema
-            const chatModalContent = document.querySelector('.chatbot-modal-content');
-            if (chatModalContent) {
-                chatModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
-            }
-        }
-
-        function updateThemeIcon() {
-            const themeIcon = document.getElementById('theme-toggle-icon');
-            if (currentTheme === 'dark') {
-                themeIcon.textContent = SUN_EMOJI; // Icona Sole per la dark mode
-            } else {
-                themeIcon.textContent = MOON_EMOJI; // Icona Luna per la light mode
-            }
-        }
-
-        // --- Casella Messaggi (sostituisce alert/confirm) ---
-        function showMessageBox(message, type = 'alert', onConfirm = null) {
-            const messageBox = document.getElementById('message-box');
-            const messageText = document.getElementById('message-box-text');
-            const okButton = document.getElementById('message-box-ok');
-            const cancelButton = document.getElementById('message-box-cancel');
-
-            messageText.textContent = message;
-            okButton.textContent = translations[currentLanguage].message_box_ok;
-            cancelButton.textContent = translations[currentLanguage].message_box_cancel;
-
-            if (type === 'confirm') {
-                cancelButton.classList.remove('hidden');
-                okButton.onclick = () => {
-                    messageBox.classList.add('hidden');
-                    if (onConfirm) onConfirm(true);
-                };
-                cancelButton.onclick = () => {
-                    messageBox.classList.add('hidden');
-                    if (onConfirm) onConfirm(false);
-                };
-            } else { // 'alert'
-                cancelButton.classList.add('hidden');
-                okButton.onclick = () => {
-                    messageBox.classList.add('hidden');
-                };
-            }
-            messageBox.classList.remove('hidden');
-            messageBox.classList.add('message-box-active'); // Aggiungi classe per animazione
-
-            // Aggiorna il tema della message box
-            const messageBoxContent = document.querySelector('.message-box-content');
-            if (messageBoxContent) {
-                messageBoxContent.classList.toggle('dark-mode-message-box', currentTheme === 'dark');
-            }
-        }
-
-        // --- Logica Autenticazione Supabase e Database ---
-        supabase.auth.onAuthStateChange(async (event, session) => {
-            if (session?.user) {
-                currentUserId = session.user.id;
-                isAuthReady = true;
-                document.getElementById('current-user-id-display').textContent = currentUserId;
-                document.getElementById('dashboard-user-id-display').textContent = currentUserId;
-                document.getElementById('logout-button').classList.remove('hidden');
-                console.log("Utente loggato (Supabase):", currentUserId);
-
-                // Controlla se una pagina specifica è richiesta tramite URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const pageId = urlParams.get('pageId');
-                if (pageId) {
-                    await loadAboutMePage(pageId);
-                } else {
-                    await loadDashboard();
-                }
-            } else {
-                currentUserId = null;
-                isAuthReady = true;
-                document.getElementById('current-user-id-display').textContent = 'N/A';
-                document.getElementById('dashboard-user-id-display').textContent = 'N/A';
-                document.getElementById('logout-button').classList.add('hidden');
-                console.log("Nessun utente loggato. Mostra la pagina di atterraggio.");
-                showPage('landing-page');
-            }
-            applyTranslations(currentLanguage); // Applica le traduzioni dopo che l'autenticazione è pronta
-        });
-
-        document.getElementById('signin-button').addEventListener('click', () => {
-            showAuthModal('login');
-        });
-
-        async function saveAboutMePage(pageData, pageId = null) {
-            if (!isAuthReady || !currentUserId) {
-                showMessageBox("Autenticazione non pronta. Riprova.");
-                return null;
-            }
-
-            try {
-                let response;
-                if (pageId) {
-                    // Aggiorna pagina esistente
-                    response = await supabase
-                        .from('aboutMePages')
-                        .update(pageData)
-                        .eq('id', pageId)
-                        .select(); // Aggiungi .select() per ottenere i dati aggiornati
-                    showMessageBox("Pagina aggiornata con successo!");
-                } else {
-                    // Crea nuova pagina
-                    response = await supabase
-                        .from('aboutMePages')
-                        .insert([{ ...pageData, user_id: currentUserId }]) // Aggiungi user_id
-                        .select(); // Aggiungi .select() per ottenere i dati inseriti
-                    showMessageBox("Pagina creata con successo!");
-                    pageId = response.data[0].id; // Ottieni l'ID del documento appena creato
-                }
-
-                if (response.error) throw response.error;
-
-                await loadDashboard(); // Aggiorna la dashboard dopo il salvataggio
-                return pageId;
-            } catch (e) {
-                console.error("Errore durante il salvataggio del documento: ", e);
-                showMessageBox(translations[currentLanguage].error_saving_page + e.message);
-                return null;
-            }
-        }
-
-        async function deleteAboutMePage(pageId) {
-            if (!isAuthReady || !currentUserId) {
-                showMessageBox("Autenticazione non pronta. Riprova.");
-                return;
-            }
-
-            showMessageBox(translations[currentLanguage].confirm_delete, 'confirm', async (confirmed) => {
-                if (confirmed) {
-                    try {
-                        const { error } = await supabase
-                            .from('aboutMePages')
-                            .delete()
-                            .eq('id', pageId)
-                            .eq('user_id', currentUserId); // Assicurati che l'utente possa eliminare solo le proprie pagine
-                        if (error) throw error;
-                        showMessageBox("Pagina eliminata con successo!");
-                        await loadDashboard(); // Aggiorna la dashboard
-                    } catch (e) {
-                        console.error("Errore durante la rimozione del documento: ", e);
-                        showMessageBox(translations[currentLanguage].error_deleting_page + e.message);
-                    }
-                }
-            });
-        }
-
-        async function loadDashboard() {
-            showPage('dashboard-page');
-            const pagesListDiv = document.getElementById('dashboard-pages-list');
-            pagesListDiv.innerHTML = '<p class="text-gray-600 text-center" data-i18n="dashboard_no_pages"></p>'; // Messaggio predefinito
-
-            if (!isAuthReady || !currentUserId) {
-                console.warn("Autenticazione non pronta o nessun utente per il caricamento della dashboard.");
-                return;
-            }
-
-            try {
-                // Fetch delle pagine dell'utente da Supabase
-                const { data, error } = await supabase
-                    .from('aboutMePages')
-                    .select('*')
-                    .eq('user_id', currentUserId)
-                    .order('createdAt', { ascending: false }); // Assumendo una colonna createdAt
-
-                if (error) throw error;
-
-                pagesListDiv.innerHTML = ''; // Pulisci l'elenco precedente
-                if (data.length === 0) {
-                    pagesListDiv.innerHTML = `<p class="text-gray-600 text-center" data-i18n="dashboard_no_pages">${translations[currentLanguage].dashboard_no_pages}</p>`;
-                } else {
-                    data.forEach((page) => {
-                        const pageId = page.id;
-                        const pageCard = `
-                            <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl p-4 shadow-md flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 md:space-x-4 border border-white border-opacity-30">
-                                <div class="flex-grow text-left">
-                                    <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-100">${page.name || 'Pagina Senza Titolo'}</h4>
-                                    <p class="text-gray-600 dark:text-gray-300 text-sm">${page.tagline || 'Nessuna tagline'}</p>
-                                    <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">ID: ${pageId}</p>
-                                </div>
-                                <div class="flex flex-wrap justify-center md:justify-end gap-2">
-                                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 view-page-btn" data-page-id="${pageId}" data-i18n="dashboard_view">${translations[currentLanguage].dashboard_view}</button>
-                                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 edit-page-btn" data-page-id="${pageId}" data-i18n="dashboard_edit">${translations[currentLanguage].dashboard_edit}</button>
-                                    <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 delete-page-btn" data-page-id="${pageId}" data-i18n="dashboard_delete">${translations[currentLanguage].dashboard_delete}</button>
-                                    <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 copy-link-btn" data-page-id="${pageId}" data-i18n="dashboard_copy_link">${translations[currentLanguage].dashboard_copy_link}</button>
-                                </div>
-                            </div>
-                        `;
-                        pagesListDiv.insertAdjacentHTML('beforeend', pageCard);
-                    });
-
-                    // Collega i listener di eventi ai pulsanti appena creati
-                    pagesListDiv.querySelectorAll('.view-page-btn').forEach(button => {
-                        button.onclick = () => {
-                            const pageId = button.dataset.pageId;
-                            window.history.pushState({}, '', `?pageId=${pageId}`);
-                            loadAboutMePage(pageId);
-                        };
-                    });
-                    pagesListDiv.querySelectorAll('.edit-page-btn').forEach(button => {
-                        button.onclick = () => {
-                            const pageId = button.dataset.pageId;
-                            openCreateEditForm(pageId);
-                        };
-                    });
-                    pagesListDiv.querySelectorAll('.delete-page-btn').forEach(button => {
-                        button.onclick = () => {
-                            const pageId = button.dataset.pageId;
-                            deleteAboutMePage(pageId);
-                        };
-                    });
-                    pagesListDiv.querySelectorAll('.copy-link-btn').forEach(button => {
-                        button.onclick = () => {
-                            const pageId = button.dataset.pageId;
-                            // Genera il link assoluto per la condivisione
-                            const link = `${window.location.origin}${window.location.pathname}?pageId=${pageId}`;
-                            navigator.clipboard.writeText(link).then(() => {
-                                showMessageBox(translations[currentLanguage].dashboard_link_copied);
-                            }).catch(err => {
-                                console.error('Errore durante la copia del link: ', err);
-                                // Fallback per browser più vecchi o ambienti senza navigator.clipboard
-                                const tempInput = document.createElement('textarea');
-                                tempInput.value = link;
-                                document.body.appendChild(tempInput);
-                                tempInput.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(tempInput);
-                                showMessageBox(translations[currentLanguage].dashboard_link_copied + " (Copiato con fallback)");
-                            });
-                        };
-                    });
-                }
-                applyTranslations(currentLanguage); // Riapplica le traduzioni per gli elementi aggiunti dinamicamente
-            } catch (e) {
-                console.error("Errore durante il caricamento delle pagine della dashboard: ", e);
-                showMessageBox("Errore durante il caricamento delle pagine della dashboard: " + e.message);
-            }
-        }
-
-        async function loadAboutMePage(pageId) {
-            showPage('about-me-display-page');
-            // Il pannello delle impostazioni è stato rimosso, quindi non c'è bisogno di mostrarlo
-
-            // Se l'utente non è autenticato, prova a caricare la pagina in modalità pubblica
-            // Altrimenti, carica la pagina solo se l'utente è il proprietario
-            let pageQuery = supabase
-                .from('aboutMePages')
-                .select('*')
-                .eq('id', pageId);
-
-            if (currentUserId) {
-                pageQuery = pageQuery.eq('user_id', currentUserId);
-            }
-
-            try {
-                console.log(`Tentativo di caricare la pagina con ID: ${pageId} per l'utente: ${currentUserId || 'non autenticato'}`);
-                const { data: pageData, error } = await pageQuery.single();
-
-                if (error) {
-                    console.error("Errore Supabase durante il recupero della pagina:", error);
-                    showMessageBox(translations[currentLanguage].error_loading_page + (error.message || "Pagina non trovata o non autorizzata."));
-                    showPage('landing-page'); // Torna alla landing page in caso di errore o accesso non autorizzato
-                    return;
-                }
-
-                if (pageData) {
-                    console.log("Dati pagina caricati con successo:", pageData);
-
-                    // Popola la sezione About Me
-                    document.getElementById('display-profile-img').src = pageData.profileImgUrl || "https://placehold.co/140x140/6190e8/ffffff?text=Profile";
-                    document.getElementById('display-name').textContent = pageData.name || translations[currentLanguage].name;
-                    document.getElementById('display-tagline').textContent = pageData.tagline || translations[currentLanguage].tagline;
-                    document.getElementById('display-about-me-description').textContent = pageData.aboutMeDescription || translations[currentLanguage].about_me_description;
-
-                    // Popola la sezione Link (gestione JSONB)
-                    const linksContainer = document.getElementById('display-links-container');
-                    linksContainer.innerHTML = '';
-                    if (pageData.links && pageData.links.length > 0) {
-                        pageData.links.forEach(link => {
-                            const linkHtml = `
-                                <a href="${link.url}" target="_blank" class="link-button">
-                                    ${link.name}
-                                </a>
-                            `;
-                            linksContainer.insertAdjacentHTML('beforeend', linkHtml);
-                        });
-                    } else {
-                        linksContainer.innerHTML = `<p class="text-gray-600 dark:text-gray-300 text-center">Nessun link aggiunto.</p>`;
-                    }
-
-                    // Popola la sezione Merch (gestione JSONB)
-                    const merchContainer = document.getElementById('display-merch-container');
-                    merchContainer.innerHTML = '';
-                    if (pageData.merch && pageData.merch.length > 0) {
-                        pageData.merch.forEach(item => {
-                            const merchHtml = `
-                                <div class="merch-item text-left">
-                                    <img src="${item.imageUrl || 'https://placehold.co/300x180/a7bfe8/ffffff?text=Merch'}" alt="${item.name}" class="merch-img mb-3">
-                                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1">${item.name}</h3>
-                                    <p class="text-gray-600 dark:text-gray-300 mb-3">${item.description}</p>
-                                    <a href="${item.buyLink}" target="_blank" class="merch-button text-sm">${translations[currentLanguage].merch_buy_now} (${item.price})</a>
-                                </div>
-                            `;
-                            merchContainer.insertAdjacentHTML('beforeend', merchHtml);
-                        });
-                    } else {
-                        merchContainer.innerHTML = `<p class="text-gray-600 dark:text-gray-300 text-center">Nessun articolo merch aggiunto.</p>`;
-                    }
-
-                    // Applica le impostazioni (lingua dell'app e gradiente di base)
-                    // Le impostazioni di gradiente e lingua della pagina non sono più persistenti nel DB per singola pagina
-                    // e sono controllate dal tema generale dell'app.
-                    applyGradient(
-                        currentTheme === 'dark' ? '#1a202c' : '#a7bfe8',
-                        currentTheme === 'dark' ? '#2d3748' : '#6190e8',
-                        135 // Direzione gradiente predefinita
-                    );
-                    applyTranslations(currentLanguage); // Applica la lingua dell'app
-                } else {
-                    console.log("Nessun documento trovato per l'ID specificato o per l'utente corrente.");
-                    showMessageBox(translations[currentLanguage].error_loading_page + "Pagina non trovata.");
-                    showPage('dashboard-page'); // Torna alla dashboard se la pagina non viene trovata
-                }
-            } catch (e) {
-                console.error("Errore durante il recupero del documento:", e);
-                showMessageBox(translations[currentLanguage].error_loading_page + e.message);
-                showPage('dashboard-page'); // Torna alla dashboard in caso di errore
-            }
-        }
-
-        let editingPageId = null; // Per tenere traccia se stiamo modificando o creando
-
-        function openCreateEditForm(pageId = null) {
-            showPage('create-edit-form');
-            editingPageId = pageId;
-
-            const formTitle = document.getElementById('create-edit-form-title');
-            const nameInput = document.getElementById('form-name');
-            const taglineInput = document.getElementById('form-tagline');
-            const aboutMeInput = document.getElementById('form-about-me');
-            const profileImgPreview = document.getElementById('profile-img-preview');
-            const profileImgUploadText = document.getElementById('profile-img-upload-text');
-            const fileInput = document.getElementById('profile-img-file-input');
-            const profileImgUrlInput = document.getElementById('form-profile-img-url-hidden'); // Il campo URL nascosto
-
-            const linksContainer = document.getElementById('form-links-container');
-            const merchContainer = document.getElementById('form-merch-container');
-
-            // Pulisci il modulo
-            nameInput.value = '';
-            taglineInput.value = '';
-            aboutMeInput.value = '';
-            profileImgUrlInput.value = ''; // Pulisci anche l'input URL nascosto
-            profileImgPreview.src = "https://placehold.co/140x140/6190e8/ffffff?text=Profile"; // Reset preview
-            profileImgUploadText.textContent = translations[currentLanguage].form_profile_img_upload; // Reset text
-            fileInput.value = ''; // Reset file input
-            linksContainer.innerHTML = '';
-            merchContainer.innerHTML = '';
-
-            if (pageId) {
-                formTitle.textContent = translations[currentLanguage].create_edit_title_edit;
-                // Carica i dati per la modifica
-                supabase
-                    .from('aboutMePages')
-                    .select('*')
-                    .eq('id', pageId)
-                    .eq('user_id', currentUserId)
-                    .single()
-                    .then(({ data, error }) => {
-                        if (error) throw error;
-                        if (data) {
-                            nameInput.value = data.name || '';
-                            taglineInput.value = data.tagline || '';
-                            aboutMeInput.value = data.aboutMeDescription || '';
-                            profileImgUrlInput.value = data.profileImgUrl || ''; // Imposta l'URL nascosto
-                            profileImgPreview.src = data.profileImgUrl || "https://placehold.co/140x140/6190e8/ffffff?text=Profile"; // Aggiorna preview
-                            profileImgUploadText.textContent = data.profileImgUrl ? 'Immagine caricata' : translations[currentLanguage].form_profile_img_upload;
-
-
-                            if (data.links) {
-                                data.links.forEach(link => addLinkForm(link.name, link.url));
-                            }
-                            if (data.merch) {
-                                data.merch.forEach(item => addMerchForm(item.name, item.description, item.imageUrl, item.price, item.buyLink));
-                            }
-                        }
-                    })
-                    .catch(e => {
-                        console.error("Errore durante il caricamento della pagina per la modifica:", e);
-                        showMessageBox("Errore durante il caricamento della pagina per la modifica: " + e.message);
-                    });
-            } else {
-                formTitle.textContent = translations[currentLanguage].create_edit_title_create;
-                // Aggiungi campi iniziali vuoti per la nuova pagina
-                addLinkForm();
-                addMerchForm();
-            }
-            applyTranslations(currentLanguage); // Riapplica le traduzioni per gli elementi del modulo
-        }
-
-        function addLinkForm(name = '', url = '') {
-            const container = document.getElementById('form-links-container');
-            const div = document.createElement('div');
-            div.className = 'flex flex-col md:flex-row gap-2 mb-2';
-            div.innerHTML = `
-                <input type="text" placeholder="${translations[currentLanguage].form_links_title.split('(')[0].trim()} Nome" value="${name}" class="link-name-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 flex-grow dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <input type="url" placeholder="${translations[currentLanguage].form_links_title.split('(')[0].trim()} URL" value="${url}" class="link-url-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 flex-grow dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <button class="remove-link-btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition duration-200">X</button>
-            `;
-            container.appendChild(div);
-            div.querySelector('.remove-link-btn').onclick = () => div.remove();
-        }
-
-        function addMerchForm(name = '', description = '', imageUrl = '', price = '', buyLink = '') {
-            const container = document.getElementById('form-merch-container');
-            const div = document.createElement('div');
-            div.className = 'flex flex-col gap-2 mb-4 p-3 border border-white border-opacity-40 rounded-lg bg-white bg-opacity-20 dark:bg-gray-800 dark:bg-opacity-20 dark:border-gray-700';
-            div.innerHTML = `
-                <input type="text" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Nome" value="${name}" class="merch-name-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <textarea placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Descrizione" class="merch-desc-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 h-20 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">${description}</textarea>
-                <input type="url" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} URL Immagine" value="${imageUrl}" class="merch-img-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <input type="text" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Prezzo (es. $25)" value="${price}" class="merch-price-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <input type="url" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Link Acquisto" value="${buyLink}" class="merch-buy-link-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
-                <button class="remove-merch-btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition duration-200 self-end">X</button>
-            `;
-            container.appendChild(div);
-            div.querySelector('.remove-merch-btn').onclick = () => div.remove();
-        }
-
-        document.getElementById('form-add-link-btn').addEventListener('click', () => addLinkForm());
-        document.getElementById('form-add-merch-btn').addEventListener('click', () => addMerchForm());
-
-        document.getElementById('form-save-btn').addEventListener('click', async () => {
-            const name = document.getElementById('form-name').value;
-            const tagline = document.getElementById('form-tagline').value;
-            const aboutMeDescription = document.getElementById('form-about-me').value;
-            const profileImgUrl = document.getElementById('form-profile-img-url-hidden').value; // Ottieni l'URL dall'input nascosto
-
-            const links = [];
-            document.querySelectorAll('#form-links-container > div').forEach(div => {
-                const name = div.querySelector('.link-name-input').value;
-                const url = div.querySelector('.link-url-input').value;
-                if (name && url) links.push({ name, url });
-            });
-
-            const merch = [];
-            document.querySelectorAll('#form-merch-container > div').forEach(div => {
-                const name = div.querySelector('.merch-name-input').value;
-                const description = div.querySelector('.merch-desc-input').value;
-                const imageUrl = div.querySelector('.merch-img-input').value;
-                const price = div.querySelector('.merch-price-input').value;
-                const buyLink = div.querySelector('.merch-buy-link-input').value;
-                if (name) merch.push({ name, description, imageUrl, price, buyLink });
-            });
-
-            const pageData = {
-                name,
-                tagline,
-                aboutMeDescription,
-                profileImgUrl,
-                links,
-                merch
-                // Le impostazioni di lingua e gradiente non sono più salvate per pagina
-            };
-
-            const savedPageId = await saveAboutMePage(pageData, editingPageId);
-            if (savedPageId) {
-                // Opzionalmente reindirizza alla pagina appena creata/modificata o torna alla dashboard
-                await loadDashboard();
-            }
-        });
-
-        document.getElementById('form-cancel-btn').addEventListener('click', () => {
-            loadDashboard();
-        });
-
-        document.getElementById('dashboard-create-new-btn').addEventListener('click', () => {
-            openCreateEditForm();
-        });
-
-        // --- Logica Modale Autenticazione ---
-        const authModal = document.getElementById('auth-modal');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const forgotPasswordForm = document.getElementById('forgot-password-form');
-        const authModalTitle = document.getElementById('auth-modal-title');
-        const authMessage = document.getElementById('auth-message');
-
-        function showAuthModal(formType) {
-            authModal.classList.remove('hidden');
-            authModal.classList.add('auth-modal-active'); // Aggiungi classe per animazione
-            // Aggiorna la classe della modale di autenticazione per il tema corrente
-            const authModalContent = document.querySelector('.auth-modal-content');
-            if (authModalContent) {
-                authModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
-            }
-
-            authMessage.textContent = ''; // Pulisci i messaggi precedenti
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-password').value = '';
-            document.getElementById('auth-forgot-email').value = '';
-            // Resetta i campi email e password del form di registrazione
-            document.getElementById('auth-email-register').value = '';
-            document.getElementById('auth-password-register').value = '';
-            document.getElementById('auth-confirm-password-register').value = ''; // Resetta anche la conferma password
-            document.getElementById('password-match-message').textContent = ''; // Pulisci il messaggio di corrispondenza password
-
-            // Resetta la visibilità delle password e la variabile di tracciamento
-            resetPasswordVisibility();
-
-            loginForm.classList.add('hidden');
-            registerForm.classList.add('hidden');
-            forgotPasswordForm.classList.add('hidden');
-
-            if (formType === 'login') {
-                loginForm.classList.remove('hidden');
-                authModalTitle.textContent = translations[currentLanguage].auth_modal_title_login;
-            } else if (formType === 'register') {
-                registerForm.classList.remove('hidden');
-                authModalTitle.textContent = translations[currentLanguage].auth_modal_title_register;
-            } else if (formType === 'forgot') {
-                forgotPasswordForm.classList.remove('hidden');
-                authModalTitle.textContent = translations[currentLanguage].auth_modal_title_forgot;
-            }
-            applyTranslations(currentLanguage); // Riapplica le traduzioni per il contenuto della modale
-        }
-
-        document.getElementById('auth-modal-close').addEventListener('click', () => {
-            authModal.classList.add('hidden');
-            authModal.classList.remove('auth-modal-active'); // Rimuovi classe per animazione
-            resetPasswordVisibility(); // Resetta la visibilità delle password alla chiusura
-        });
-
-        document.getElementById('go-to-register').addEventListener('click', () => showAuthModal('register'));
-        document.getElementById('go-to-login').addEventListener('click', () => showAuthModal('login'));
-        document.getElementById('forgot-password-link').addEventListener('click', () => showAuthModal('forgot'));
-        document.getElementById('go-to-login-from-forgot').addEventListener('click', () => showAuthModal('login'));
-
-        // Funzione per resettare la visibilità di tutte le password
-        function resetPasswordVisibility() {
-            document.querySelectorAll('.password-input').forEach(input => {
-                input.type = 'password';
-            });
-            document.querySelectorAll('.toggle-password-btn').forEach(button => {
-                button.innerHTML = EYE_OPEN_SVG; // Reset all buttons to eye open
-            });
-            currentlyVisiblePasswordInputId = null;
-        }
-
-        // Funzione universale per mostrare/nascondere la password
-        function togglePasswordVisibility(inputElementId, buttonElementId) {
-            const inputElement = document.getElementById(inputElementId);
-            const buttonElement = document.getElementById(buttonElementId);
-
-            if (currentlyVisiblePasswordInputId === inputElementId) {
-                // Se è la stessa password già visibile, nascondila
-                inputElement.type = 'password';
-                buttonElement.innerHTML = EYE_OPEN_SVG;
-                currentlyVisiblePasswordInputId = null;
-            } else {
-                // Se c'è un'altra password visibile, nascondila prima
-                if (currentlyVisiblePasswordInputId) {
-                    const prevInput = document.getElementById(currentlyVisiblePasswordInputId);
-                    // Trova il pulsante associato all'input precedentemente visibile
-                    let prevButton = null;
-                    if (currentlyVisiblePasswordInputId === 'auth-password') {
-                        prevButton = document.getElementById('toggle-password-login');
-                    } else if (currentlyVisiblePasswordInputId === 'auth-password-register') {
-                        prevButton = document.getElementById('toggle-password-register');
-                    } else if (currentlyVisiblePasswordInputId === 'auth-confirm-password-register') {
-                        prevButton = document.getElementById('toggle-confirm-password-register');
-                    }
-
-                    if (prevInput && prevButton) {
-                        prevInput.type = 'password';
-                        prevButton.innerHTML = EYE_OPEN_SVG;
-                    }
-                }
-                // Mostra la nuova password
-                inputElement.type = 'text';
-                buttonElement.innerHTML = EYE_CLOSED_SVG;
-                currentlyVisiblePasswordInputId = inputElementId;
-            }
-        }
-
-        // Event Listeners per i pulsanti mostra/nascondi password
-        document.getElementById('toggle-password-login').addEventListener('click', () => togglePasswordVisibility('auth-password', 'toggle-password-login'));
-        document.getElementById('toggle-password-register').addEventListener('click', () => togglePasswordVisibility('auth-password-register', 'toggle-password-register'));
-        document.getElementById('toggle-confirm-password-register').addEventListener('click', () => togglePasswordVisibility('auth-confirm-password-register', 'toggle-confirm-password-register'));
-
-
-        document.getElementById('login-button').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                authModal.classList.add('hidden');
-                authModal.classList.remove('auth-modal-active');
-                showMessageBox("Accesso effettuato con successo!");
-            } catch (error) {
-                console.error("Errore di accesso:", error);
-                authMessage.textContent = translations[currentLanguage].auth_error_login + error.message;
-            }
-        });
-
-        // Funzione per controllare la corrispondenza delle password (Registrazione)
-        const passwordRegister = document.getElementById('auth-password-register');
-        const confirmPasswordRegister = document.getElementById('auth-confirm-password-register');
-        const passwordMatchMessage = document.getElementById('password-match-message');
-
-        function checkPasswordsMatch() {
-            if (passwordRegister.value === '' && confirmPasswordRegister.value === '') {
-                passwordMatchMessage.textContent = '';
-                passwordMatchMessage.className = '';
-                return false;
-            }
-            if (passwordRegister.value === confirmPasswordRegister.value) {
-                passwordMatchMessage.textContent = translations[currentLanguage].auth_passwords_match;
-                passwordMatchMessage.className = 'text-green-500 text-sm mt-2';
-                return true;
-            } else {
-                passwordMatchMessage.textContent = translations[currentLanguage].auth_passwords_no_match;
-                passwordMatchMessage.className = 'text-red-500 text-sm mt-2';
-                return false;
-            }
-        }
-
-        passwordRegister.addEventListener('input', checkPasswordsMatch);
-        confirmPasswordRegister.addEventListener('input', checkPasswordsMatch);
-
-
-        document.getElementById('register-button').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email-register').value;
-            const password = document.getElementById('auth-password-register').value;
-
-            if (!checkPasswordsMatch()) {
-                authMessage.textContent = translations[currentLanguage].auth_passwords_no_match;
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) throw error;
-                authModal.classList.add('hidden');
-                authModal.classList.remove('auth-modal-active');
-                showMessageBox("Registrazione effettuata con successo! Ora sei loggato.");
-            } catch (error) {
-                console.error("Errore di registrazione:", error);
-                authMessage.textContent = translations[currentLanguage].auth_error_register + error.message;
-            }
-        });
-
-        document.getElementById('reset-password-button').addEventListener('click', async () => {
-            const email = document.getElementById('auth-forgot-email').value;
-            if (!email) {
-                authMessage.textContent = "Inserisci il tuo indirizzo email.";
-                return;
-            }
-            try {
-                const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-                if (error) throw error;
-                authMessage.textContent = translations[currentLanguage].auth_reset_email_sent;
-                // Opzionalmente, nascondi il modulo dopo un breve ritardo
-                setTimeout(() => {
-                    authModal.classList.add('hidden');
-                    authModal.classList.remove('auth-modal-active');
-                }, 3000);
-            } catch (error) {
-                console.error("Errore di reimpostazione password:", error);
-                authMessage.textContent = translations[currentLanguage].auth_error_reset + error.message;
-            }
-        });
-
-        // --- Logica Caricamento Immagine Profilo ---
-        const profileImgUploadArea = document.getElementById('profile-img-upload-area');
-        const profileImgFileInput = document.getElementById('profile-img-file-input');
-        const profileImgPreview = document.getElementById('profile-img-preview');
-        const profileImgUploadText = document.getElementById('profile-img-upload-text');
-        const formProfileImgUrlHidden = document.getElementById('form-profile-img-url-hidden');
-
-        // Impedisci il comportamento predefinito del browser per il drag & drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            profileImgUploadArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false); // Per impedire il drop sull'intera pagina
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Evidenzia l'area di drop quando un file viene trascinato sopra
-        ['dragenter', 'dragover'].forEach(eventName => {
-            profileImgUploadArea.addEventListener(eventName, () => profileImgUploadArea.classList.add('border-blue-500', 'bg-opacity-40'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            profileImgUploadArea.addEventListener(eventName, () => profileImgUploadArea.classList.remove('border-blue-500', 'bg-opacity-40'), false);
-        });
-
-        // Gestisci il drop dei file
-        profileImgUploadArea.addEventListener('drop', handleDrop, false);
-
-        async function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            await handleFiles(files);
-        }
-
-        // Gestisci la selezione dei file tramite click
-        profileImgUploadArea.addEventListener('click', () => {
-            profileImgFileInput.click();
-        });
-
-        profileImgFileInput.addEventListener('change', async (e) => {
-            const files = e.target.files;
-            await handleFiles(files);
-        });
-
-        async function handleFiles(files) {
-            if (files.length === 0) return;
-
-            const file = files[0];
-            if (!file.type.startsWith('image/')) {
-                showMessageBox("Si prega di caricare un file immagine valido.");
-                return;
-            }
-
-            if (!currentUserId) {
-                showMessageBox("Devi essere loggato per caricare immagini.");
-                return;
-            }
-
-            profileImgUploadText.textContent = "Caricamento in corso...";
-            profileImgPreview.src = "https://placehold.co/140x140/cccccc/333333?text=Loading..."; // Placeholder di caricamento
-
-            const fileName = `${currentUserId}/${Date.now()}-${file.name}`; // Percorso unico per l'immagine dell'utente
-
-            try {
-                const { data, error } = await supabase.storage
-                    .from('profile-images') // Assicurati che questo bucket esista in Supabase Storage
-                    .upload(fileName, file, {
-                        cacheControl: '3600',
-                        upsert: false // Imposta su true se vuoi sovrascrivere file con lo stesso nome
-                    });
-
-                if (error) throw error;
-
-                const { data: publicUrlData } = supabase.storage
-                    .from('profile-images')
-                    .getPublicUrl(fileName);
-
-                if (publicUrlData && publicUrlData.publicUrl) {
-                    formProfileImgUrlHidden.value = publicUrlData.publicUrl; // Salva l'URL pubblico nell'input nascosto
-                    profileImgPreview.src = publicUrlData.publicUrl; // Aggiorna l'anteprima
-                    profileImgUploadText.textContent = translations[currentLanguage].upload_success;
-                    showMessageBox(translations[currentLanguage].upload_success);
-                } else {
-                    throw new Error("Impossibile ottenere l'URL pubblico dell'immagine.");
-                }
-            } catch (e) {
-                console.error("Errore durante il caricamento dell'immagine:", e);
-                showMessageBox(translations[currentLanguage].upload_error + e.message);
-                profileImgUploadText.textContent = translations[currentLanguage].form_profile_img_upload; // Reset text on error
-                profileImgPreview.src = "https://placehold.co/140x140/6190e8/ffffff?text=Profile"; // Reset preview on error
-                formProfileImgUrlHidden.value = ''; // Clear hidden URL on error
-            }
-        }
-
-        // --- Chatbot AI Logic ---
-        function toggleChatbot() {
-            const chatbotModal = document.getElementById('chatbot-modal');
-            chatbotModal.classList.toggle('hidden');
-            chatbotModal.classList.toggle('chatbot-modal-active');
-            // Aggiorna la classe della chatbot modal per il tema corrente
-            const chatModalContent = document.querySelector('.chatbot-modal-content');
-            if (chatModalContent) {
-                chatModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
-            }
-            // Scrolla in basso quando si apre la chat
-            const chatMessages = document.getElementById('chat-messages');
-            if (!chatbotModal.classList.contains('hidden')) {
-                // Se la chat è aperta e la cronologia è vuota, invia il prompt iniziale per la lingua
-                if (chatHistory.length === 0) {
-                    appendMessage('ai', "Hello! I am your AboutMe AI Assistant. What language would you like me to respond in? (e.g., English, Italian, German, French)");
-                }
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-            applyTranslations(currentLanguage); // Applica le traduzioni per la chatbot (UI)
-        }
-
-        function appendMessage(sender, message) {
-            const chatMessages = document.getElementById('chat-messages');
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('mb-2', 'p-2', 'rounded-lg', 'max-w-[80%]');
-
-            if (sender === 'user') {
-                messageElement.classList.add('bg-blue-500', 'text-white', 'self-end', 'ml-auto', 'rounded-br-none');
-            } else {
-                messageElement.classList.add('bg-gray-200', 'text-gray-800', 'self-start', 'mr-auto', 'rounded-bl-none');
-                // Adatta il colore del testo del messaggio AI al tema
-                if (currentTheme === 'dark') {
-                    messageElement.classList.remove('bg-gray-200', 'text-gray-800');
-                    messageElement.classList.add('bg-gray-700', 'text-gray-100');
-                }
-            }
-            messageElement.textContent = message;
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Scrolla in basso
-        }
-
-        async function sendMessageToGemini() {
-            const chatInput = document.getElementById('chat-input');
-            const message = chatInput.value.trim();
-            if (!message) return;
-
-            appendMessage('user', message);
-            chatInput.value = ''; // Pulisci l'input
-
-            const loadingIndicator = document.getElementById('chatbot-loading');
-            loadingIndicator.classList.remove('hidden');
-
-            let geminiPrompt = message;
-            if (chatHistory.length === 0) { // Primo messaggio dell'utente, prova a rilevare la lingua
-                const lowerCaseMessage = message.toLowerCase();
-                if (lowerCaseMessage.includes('italian') || lowerCaseMessage.includes('italiano')) {
-                    selectedChatbotLanguage = 'it';
-                } else if (lowerCaseMessage.includes('german') || lowerCaseMessage.includes('tedesco')) {
-                    selectedChatbotLanguage = 'de';
-                } else if (lowerCaseMessage.includes('french') || lowerCaseMessage.includes('francese')) {
-                    selectedChatbotLanguage = 'fr';
-                } else {
-                    selectedChatbotLanguage = 'en'; // Predefinito se non riconosciuto
-                }
-                geminiPrompt = `Please respond in ${selectedChatbotLanguage === 'en' ? 'English' : selectedChatbotLanguage === 'it' ? 'Italian' : selectedChatbotLanguage === 'de' ? 'German' : 'French'}. ${message}`;
-            } else {
-                // Per i messaggi successivi, assicurati che Gemini continui nella lingua selezionata
-                geminiPrompt = `Please continue our conversation in ${selectedChatbotLanguage === 'en' ? 'English' : selectedChatbotLanguage === 'it' ? 'Italian' : selectedChatbotLanguage === 'de' ? 'German' : 'French'}. ${message}`;
-            }
-
-            chatHistory.push({ role: "user", parts: [{ text: geminiPrompt }] }); // Aggiungi il prompt modificato alla cronologia
-
-            try {
-                const payload = { contents: chatHistory };
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-                console.log("Gemini API response:", result); // Debug: Controlla la risposta di Gemini
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const aiResponse = result.candidates[0].content.parts[0].text;
-                    appendMessage('ai', aiResponse);
-                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
-                } else {
-                    appendMessage('ai', "Mi dispiace, non sono riuscito a generare una risposta. Riprova più tardi.");
-                    console.error("Risposta Gemini inattesa:", result);
-                }
-            } catch (error) {
-                console.error("Errore durante la chiamata all'API Gemini:", error);
-                appendMessage('ai', "Si è verificato un errore durante la comunicazione con l'assistente AI.");
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        }
-
-        // Caricamento iniziale del tema
-        window.onload = () => {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                currentTheme = savedTheme;
-                document.body.classList.add(`${currentTheme}-mode`);
-            } else {
-                // Predefinito in modalità scura se nessuna preferenza è salvata
-                document.body.classList.add('dark-mode');
-                currentTheme = 'dark';
-            }
-            updateThemeIcon(); // Imposta l'icona corretta in base al tema caricato
-            // Applica il gradiente iniziale predefinito in base al tema caricato
-            if (currentTheme === 'dark') {
-                applyGradient('#1a202c', '#2d3748', 135);
-            } else {
-                applyGradient('#a7bfe8', '#6190e8', 135);
-            }
-
-            // Aggiungi l'event listener per il pulsante del tema
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-            // Aggiungi l'event listener per il pulsante di logout qui per assicurarti che il DOM sia caricato
-            document.getElementById('logout-button').addEventListener('click', async () => {
-                console.log("Logout button clicked."); // Debug: Conferma il click
-                try {
-                    console.log("Attempting to sign out with Supabase auth:", supabase.auth); // Debug: Controlla l'oggetto auth
-                    const { error } = await supabase.auth.signOut();
-                    if (error) {
-                        console.error("Supabase signOut error:", error); // Log di errore più specifico
-                        throw error;
-                    }
-                    showMessageBox("Disconnessione effettuata con successo!");
-                    showPage('landing-page');
-                    console.log("Logout successful, redirecting to landing page."); // Debug: Conferma il successo del logout
-                } catch (error) {
-                    console.error("Errore durante la disconnessione:", error);
-                    showMessageBox("Errore durante la disconnessione: " + error.message);
-                }
-            });
-
-            // Event listeners per il chatbot
-            document.getElementById('chatbot-toggle-btn').addEventListener('click', toggleChatbot);
-            document.getElementById('chatbot-close-btn').addEventListener('click', toggleChatbot);
-            document.getElementById('chat-send-btn').addEventListener('click', sendMessageToGemini);
-            document.getElementById('chat-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessageToGemini();
-                }
-            });
-        };
-
-    </script>
     <style>
         /* Stili di base per entrambi i temi */
         body {
@@ -1625,12 +257,6 @@
         .auth-modal-overlay.auth-modal-active .auth-modal-content {
             transform: translateY(0);
             opacity: 1;
-        }
-        .auth-modal-content.light-mode-modal {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #333;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
         .auth-modal-close-btn {
             position: absolute;
@@ -2142,5 +768,1571 @@
         </div>
     </div>
 
+    <!-- Supabase SDK -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // Le tue credenziali Supabase
+        const SUPABASE_URL = 'https://fyncjiafbsmsjrfxtqyg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5bmNqaWFmYnNtc2pyZnh0cXlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1NTYxMzYsImV4cCI6MjA2NzEzMjEzNn0.fGkL6NPd6TNeo0zuC4VY8kJ79HNMWD9G8XVVbQrhEWo';
+
+        // Inizializza il client Supabase
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase client initialized:", supabase); // Debug: Conferma l'inizializzazione di Supabase
+
+        let currentUserId = null;
+        let isAuthReady = false;
+        let currentlyVisiblePasswordInputId = null; // Variabile per tracciare la password attualmente visibile
+
+        // Emoji per il tema
+        const SUN_EMOJI = "☀️"; // Emoji Sole
+        const MOON_EMOJI = "🌙"; // Emoji Luna
+
+        // API Key per Gemini (fornita dall'utente)
+        const GEMINI_API_KEY = ""; // Changed to empty string as per instructions
+        let chatHistory = []; // Per memorizzare la cronologia della chat per l'assistente AI
+        let selectedChatbotLanguage = 'en'; // Lingua predefinita per le risposte del chatbot
+        const chatbotEmojis = ["😊", "👍", "✨", "🚀", "💡", "🤖", "🌟"]; // Emoji per il chatbot
+
+        // Funzione per ottenere un'emoji casuale dal chatbot
+        function getRandomChatbotEmoji() {
+            return chatbotEmojis[Math.floor(Math.random() * chatbotEmojis.length)];
+        }
+
+        // SVG Icons for password visibility
+        const EYE_OPEN_SVG = `
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+        `;
+        const EYE_CLOSED_SVG = `
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.54 18.54 0 0 1 2.21-3.6l-1.39-1.39A1.003 1.003 0 0 0 1.29 5.29L2.71 3.87a1.003 1.003 0 0 0-1.42-1.42L.29 2.45a1.003 1.003 0 0 0 1.42 1.42L2.71 3.87a1.003 1.003 0 0 0 1.42 1.42zM12 9.5a2.5 2.5 0 0 0 0 5 2.5 2.5 0 0 0 0-5z"></path>
+                <path d="M1 1l22 22"></path>
+            </svg>
+        `;
+
+
+        // Oggetto delle traduzioni
+        const translations = {
+            en: {
+                appName: "AboutMe",
+                landing_welcome: "Welcome to AboutMe!",
+                landing_description: "Create your personal page, share your links, and showcase your merchandise. Sign in to get started!",
+                landing_signin_button: "Sign In / Register",
+                dashboard_title: "Your AboutMe Pages",
+                dashboard_no_pages: "You haven't created any pages yet.",
+                dashboard_create_new: "Create New AboutMe Page",
+                dashboard_view: "View",
+                dashboard_edit: "Edit",
+                dashboard_delete: "Delete",
+                dashboard_copy_link: "Copy Link",
+                dashboard_link_copied: "Link copied!",
+                create_edit_title_create: "Create New AboutMe Page",
+                create_edit_title_edit: "Edit AboutMe Page",
+                form_name: "Your Name:",
+                form_tagline: "Your Tagline:",
+                form_about_me: "About Me Description:",
+                form_profile_img: "Profile Image URL:",
+                form_profile_img_upload: "Drag & Drop or Click to Upload Profile Image",
+                form_links_title: "Links (Name, URL):",
+                form_add_link: "Add Link",
+                form_merch_title: "Merchandise (Name, Description, Image URL, Price, Buy Link):",
+                form_add_merch: "Add Merch Item",
+                form_save_button: "Save Page",
+                form_cancel_button: "Cancel",
+                about_me_page_title: "AboutMe Page",
+                name: "Your Name Here",
+                tagline: "Creative | Developer | Enthusiast",
+                about_me_description: "Welcome to my personal space! I'm passionate about creating engaging digital experiences and sharing my journey. Here you'll find everything about me, my projects, and how to connect.",
+                links_title: "My Links",
+                link_portfolio: "Portfolio",
+                link_github: "GitHub",
+                link_linkedin: "LinkedIn",
+                link_twitter: "Twitter",
+                merch_title: "My Merch",
+                merch_item_1_name: "Cool T-Shirt",
+                merch_item_1_desc: "Comfortable and stylish, perfect for any occasion.",
+                merch_item_2_name: "Awesome Mug",
+                merch_item_2_desc: "Start your day with a sip of inspiration.",
+                merch_item_3_name: "Cozy Hoodie",
+                merch_item_3_desc: "Stay warm and show your support.",
+                merch_buy_now: "Buy Now",
+                settings_title: "Settings", // This will be removed, but kept for consistency in translations object
+                select_language: "Select Language:", // This will be removed, but kept for consistency in translations object
+                gradient_color_1: "Gradient Color 1:", // This will be removed, but kept for consistency in translations object
+                gradient_color_2: "Gradient Color 2:", // This will be removed, but kept for consistency in translations object
+                gradient_direction: "Gradient Direction (deg):", // This will be removed, but kept for consistency in translations object
+                error_loading_page: "Error loading page: ",
+                error_saving_page: "Error saving page: ",
+                error_deleting_page: "Error deleting page: ",
+                confirm_delete: "Are you sure you want to delete this page?",
+                message_box_ok: "OK",
+                message_box_cancel: "Cancel",
+                auth_modal_title_login: "Login to AboutMe",
+                auth_modal_title_register: "Register for AboutMe",
+                auth_modal_title_forgot: "Reset Password",
+                auth_email: "Email:",
+                auth_password: "Password:",
+                auth_show_password: "Show Password",
+                auth_confirm_password: "Confirm Password:",
+                auth_passwords_match: "Passwords match!",
+                auth_passwords_no_match: "Passwords do not match!",
+                auth_login_button: "Login",
+                auth_register_button: "Register",
+                auth_forgot_password: "Forgot Password?",
+                auth_go_to_register: "Don't have an account? Register",
+                auth_go_to_login: "Already have an account? Login",
+                auth_reset_password_button: "Send Reset Email",
+                auth_reset_email_sent: "Password reset email sent! Check your inbox.",
+                auth_error_login: "Login failed: ",
+                auth_error_register: "Registration failed: ",
+                auth_error_reset: "Password reset failed: ",
+                logout_button: "Logout",
+                theme_toggle_label: "Toggle Theme",
+                upload_success: "Image uploaded successfully!",
+                upload_error: "Image upload failed: ",
+                chatbot_title: "AboutMe AI Assistant",
+                chatbot_input_placeholder: "Type your message...",
+                chatbot_send: "Send",
+                chatbot_external_query_response: "I'm designed to help with questions about this website only. I cannot provide information from external sites."
+            },
+            it: {
+                appName: "AboutMe",
+                landing_welcome: "Benvenuto su AboutMe!",
+                landing_description: "Crea la tua pagina personale, condividi i tuoi link e mostra il tuo merchandising. Accedi per iniziare!",
+                landing_signin_button: "Accedi / Registrati",
+                dashboard_title: "Le Tue Pagine AboutMe",
+                dashboard_no_pages: "Non hai ancora creato nessuna pagina.",
+                dashboard_create_new: "Crea Nuova Pagina AboutMe",
+                dashboard_view: "Visualizza",
+                dashboard_edit: "Modifica",
+                dashboard_delete: "Elimina",
+                dashboard_copy_link: "Copia Link",
+                dashboard_link_copied: "Link copiato!",
+                create_edit_title_create: "Crea Nuova Pagina AboutMe",
+                create_edit_title_edit: "Modifica Pagina AboutMe",
+                form_name: "Il Tuo Nome:",
+                form_tagline: "La Tua Tagline:",
+                form_about_me: "Descrizione About Me:",
+                form_profile_img: "URL Immagine Profilo:",
+                form_profile_img_upload: "Trascina & Rilascia o Clicca per Caricare Immagine Profilo",
+                form_links_title: "Link (Nome, URL):",
+                form_add_link: "Aggiungi Link",
+                form_merch_title: "Merchandise (Nome, Descrizione, URL Immagine, Prezzo, Link Acquisto):",
+                form_add_merch: "Aggiungi Articolo Merch",
+                form_save_button: "Salva Pagina",
+                form_cancel_button: "Annulla",
+                about_me_page_title: "Pagina AboutMe",
+                name: "Il Tuo Nome Qui",
+                tagline: "Creativo | Sviluppatore | Appassionato",
+                about_me_description: "Benvenuto nel mio spazio personale! Sono appassionato di creare esperienze digitali coinvolgenti e di condividere il mio percorso. Qui troverai tutto su di me, i miei progetti e come connetterti.",
+                links_title: "I Miei Link",
+                link_portfolio: "Portfolio",
+                link_github: "GitHub",
+                link_linkedin: "LinkedIn",
+                link_twitter: "Twitter",
+                merch_title: "Il Mio Merch",
+                merch_item_1_name: "T-Shirt Fantastica",
+                merch_item_1_desc: "Comoda ed elegante, perfetta per ogni occasione.",
+                merch_item_2_name: "Tazza Eccezionale",
+                merch_item_2_desc: "Inizia la giornata con un sorso di ispirazione.",
+                merch_item_3_name: "Felpa Comoda",
+                merch_item_3_desc: "Rimani al caldo e mostra il tuo supporto.",
+                merch_buy_now: "Acquista Ora",
+                settings_title: "Impostazioni",
+                select_language: "Seleziona Lingua:",
+                gradient_color_1: "Colore Gradiente 1:",
+                gradient_color_2: "Colore Gradiente 2:",
+                gradient_direction: "Direzione Gradiente (gradi):",
+                error_loading_page: "Errore durante il caricamento della pagina: ",
+                error_saving_page: "Errore durante il salvataggio della pagina: ",
+                error_deleting_page: "Errore durante l'eliminazione della pagina: ",
+                confirm_delete: "Sei sicuro di voler eliminare questa pagina?",
+                message_box_ok: "OK",
+                message_box_cancel: "Annulla",
+                auth_modal_title_login: "Accedi ad AboutMe",
+                auth_modal_title_register: "Registrati ad AboutMe",
+                auth_modal_title_forgot: "Reimposta Password",
+                auth_email: "Email:",
+                auth_password: "Password:",
+                auth_show_password: "Mostra Password",
+                auth_confirm_password: "Conferma Password:",
+                auth_passwords_match: "Le password corrispondono!",
+                auth_passwords_no_match: "Le password non corrispondono!",
+                auth_login_button: "Accedi",
+                auth_register_button: "Registrati",
+                auth_forgot_password: "Password Dimenticata?",
+                auth_go_to_register: "Non hai un account? Registrati",
+                auth_go_to_login: "Hai già un account? Accedi",
+                auth_reset_password_button: "Invia Email di Reimpostazione",
+                auth_reset_email_sent: "Email di reimpostazione password inviata! Controlla la tua casella di posta.",
+                auth_error_login: "Accesso fallito: ",
+                auth_error_register: "Registrazione fallita: ",
+                auth_error_reset: "Reimpostazione password fallita: ",
+                logout_button: "Esci",
+                theme_toggle_label: "Cambia Tema",
+                upload_success: "Immagine caricata con successo!",
+                upload_error: "Caricamento immagine fallito: ",
+                chatbot_title: "Assistente AI AboutMe",
+                chatbot_input_placeholder: "Scrivi il tuo messaggio...",
+                chatbot_send: "Invia",
+                chatbot_external_query_response: "Sono progettato per rispondere solo a domande relative a questo sito web. Non posso fornire informazioni da siti esterni."
+            },
+            de: {
+                appName: "AboutMe",
+                landing_welcome: "Willkommen bei AboutMe!",
+                landing_description: "Erstellen Sie Ihre persönliche Seite, teilen Sie Ihre Links und präsentieren Sie Ihre Merchandise-Artikel. Melden Sie sich an, um loszulegen!",
+                landing_signin_button: "Anmelden / Registrieren",
+                dashboard_title: "Ihre AboutMe Seiten",
+                dashboard_no_pages: "Sie haben noch keine Seiten erstellt.",
+                dashboard_create_new: "Neue AboutMe Seite Erstellen",
+                dashboard_view: "Anzeigen",
+                dashboard_edit: "Bearbeiten",
+                dashboard_delete: "Löschen",
+                dashboard_copy_link: "Link Kopieren",
+                dashboard_link_copied: "Link kopiert!",
+                create_edit_title_create: "Neue AboutMe Seite Erstellen",
+                create_edit_title_edit: "AboutMe Seite Bearbeiten",
+                form_name: "Ihr Name:",
+                form_tagline: "Ihr Slogan:",
+                form_about_me: "Über mich Beschreibung:",
+                form_profile_img: "Profilbild-URL:",
+                form_profile_img_upload: "Ziehen & Ablegen oder Klicken zum Hochladen des Profilbildes",
+                form_links_title: "Links (Name, URL):",
+                form_add_link: "Link Hinzufügen",
+                form_merch_title: "Merchandise (Name, Beschreibung, Bild-URL, Preis, Kauflink):",
+                form_add_merch: "Merch-Artikel Hinzufügen",
+                form_save_button: "Seite Speichern",
+                form_cancel_button: "Abbrechen",
+                about_me_page_title: "AboutMe Seite",
+                name: "Dein Name Hier",
+                tagline: "Kreativ | Entwickler | Enthusiast",
+                about_me_description: "Willkommen in meinem persönlichen Bereich! Ich bin leidenschaftlich daran interessiert, ansprechende digitale Erlebnisse zu schaffen und meine Reise zu teilen. Hier finden Sie alles über mich, meine Projekte und wie Sie sich verbinden können.",
+                links_title: "Meine Links",
+                link_portfolio: "Portfolio",
+                link_github: "GitHub",
+                link_linkedin: "LinkedIn",
+                link_twitter: "Twitter",
+                merch_title: "Mein Merch",
+                merch_item_1_name: "Cooles T-Shirt",
+                merch_item_1_desc: "Bequem und stilvoll, perfekt für jeden Anlass.",
+                merch_item_2_name: "Tolle Tasse",
+                merch_item_2_desc: "Beginnen Sie Ihren Tag mit einem Schluck Inspiration.",
+                merch_item_3_name: "Gemütlicher Hoodie",
+                merch_item_3_desc: "Bleiben Sie warm und zeigen Sie Ihre Unterstützung.",
+                merch_buy_now: "Jetzt Kaufen",
+                settings_title: "Einstellungen",
+                select_language: "Sprache auswählen:",
+                gradient_color_1: "Farbverlauf Farbe 1:",
+                gradient_color_2: "Farbverlauf Farbe 2:",
+                gradient_direction: "Farbverlauf Richtung (Grad):",
+                error_loading_page: "Fehler beim Laden der Seite: ",
+                error_saving_page: "Fehler beim Speichern der Seite: ",
+                error_deleting_page: "Fehler beim Löschen der Seite: ",
+                confirm_delete: "Möchten Sie diese Seite wirklich löschen?",
+                message_box_ok: "OK",
+                message_box_cancel: "Abbrechen",
+                auth_modal_title_login: "Bei AboutMe anmelden",
+                auth_modal_title_register: "Bei AboutMe registrieren",
+                auth_modal_title_forgot: "Passwort zurücksetzen",
+                auth_email: "E-Mail:",
+                auth_password: "Passwort:",
+                auth_show_password: "Passwort anzeigen",
+                auth_confirm_password: "Passwort bestätigen:",
+                auth_passwords_match: "Passwörter stimmen überein!",
+                auth_passwords_no_match: "Passwörter stimmen nicht überein!",
+                auth_login_button: "Anmelden",
+                auth_register_button: "Registrieren",
+                auth_forgot_password: "Passwort vergessen?",
+                auth_go_to_register: "Noch kein Konto? Registrieren",
+                auth_go_to_login: "Bereits ein Konto? Anmelden",
+                auth_reset_password_button: "E-Mail zum Zurücksetzen senden",
+                auth_reset_email_sent: "Passwort-Reset-E-Mail gesendet! Überprüfen Sie Ihren Posteingang.",
+                auth_error_login: "Anmeldung fehlgeschlagen: ",
+                auth_error_register: "Registrierung fehlgeschlagen: ",
+                auth_error_reset: "Passwort-Reset fehlgeschlagen: "
+            },
+            fr: {
+                appName: "AboutMe",
+                landing_welcome: "Bienvenue sur AboutMe !",
+                landing_description: "Créez votre page personnelle, partagez vos liens et présentez vos produits dérivés. Connectez-vous pour commencer !",
+                landing_signin_button: "Se Connecter / S'inscrire",
+                dashboard_title: "Vos Pages AboutMe",
+                dashboard_no_pages: "Vous n'avez pas encore créé de pages.",
+                dashboard_create_new: "Créer une Nouvelle Page AboutMe",
+                dashboard_view: "Afficher",
+                dashboard_edit: "Modifier",
+                dashboard_delete: "Supprimer",
+                dashboard_copy_link: "Copier le Lien",
+                dashboard_link_copied: "Lien copié !",
+                create_edit_title_create: "Créer une Nouvelle Page AboutMe",
+                create_edit_title_edit: "Modifier la Page AboutMe",
+                form_name: "Votre Nom :",
+                form_tagline: "Votre Slogan :",
+                form_about_me: "Description À Propos de Moi :",
+                form_profile_img: "URL de l'Image de Profil :",
+                form_profile_img_upload: "Glisser-déposer ou Cliquer pour Télécharger l'Image de Profil",
+                form_links_title: "Liens (Nom, URL) :",
+                form_add_link: "Ajouter un Lien",
+                form_merch_title: "Produits Dérivés (Nom, Description, URL de l'Image, Prix, Lien d'Achat) :",
+                form_add_merch: "Ajouter un Article Merch",
+                form_save_button: "Enregistrer la Page",
+                form_cancel_button: "Annuler",
+                about_me_page_title: "Page AboutMe",
+                name: "Votre Nom Ici",
+                tagline: "Créatif | Développeur | Passionné",
+                about_me_description: "Bienvenue dans mon espace personnel ! Je suis passionné par la création d'expériences numériques engageantes et le partage de mon parcours. Ici, vous trouverez tout sur moi, mes projets et comment me contacter.",
+                links_title: "Mes Liens",
+                link_portfolio: "Portfolio",
+                link_github: "GitHub",
+                link_linkedin: "LinkedIn",
+                link_twitter: "Twitter",
+                merch_title: "Mon Merch",
+                merch_item_1_name: "T-Shirt Cool",
+                merch_item_1_desc: "Confortable et élégant, parfait pour toute occasion.",
+                merch_item_2_name: "Super Tasse",
+                merch_item_2_desc: "Commencez votre journée avec une gorgée d'inspiration.",
+                merch_item_3_name: "Sweat à Capuche Confortable",
+                merch_item_3_desc: "Restez au chaud et montrez votre soutien.",
+                merch_buy_now: "Acheter Maintenant",
+                settings_title: "Paramètres",
+                select_language: "Sélectionner la langue :",
+                gradient_color_1: "Couleur du dégradé 1 :",
+                gradient_color_2: "Couleur du dégradé 2 :",
+                gradient_direction: "Direction du dégradé (degrés) :",
+                error_loading_page: "Erreur lors du caricamento de la page : ",
+                error_saving_page: "Errore lors de l'enregistrement de la page : ",
+                error_deleting_page: "Errore lors de la suppression de la page : ",
+                confirm_delete: "Êtes-vous sûr de vouloir supprimer cette page ?",
+                message_box_ok: "OK",
+                message_box_cancel: "Annuler",
+                auth_modal_title_login: "Se connecter à AboutMe",
+                auth_modal_title_register: "S'inscrire à AboutMe",
+                auth_modal_title_forgot: "Réinitialiser le mot de passe",
+                auth_email: "E-mail :",
+                auth_password: "Mot de passe :",
+                auth_show_password: "Afficher le mot de passe",
+                auth_confirm_password: "Confirmer le mot de passe :",
+                auth_passwords_match: "Les mots de passe correspondent !",
+                auth_passwords_no_match: "Les mots de passe ne correspondent pas !",
+                auth_login_button: "Se connecter",
+                auth_register_button: "S'inscrire",
+                auth_forgot_password: "Mot de passe oublié ?",
+                auth_go_to_register: "Pas encore de compte ? S'inscrire",
+                auth_go_to_login: "Déjà un compte ? Se connecter",
+                auth_reset_password_button: "Envoyer l'e-mail de réinitialisation",
+                auth_reset_email_sent: "E-mail de réinitialisation du mot de passe envoyé ! Vérifiez votre boîte de réception.",
+                auth_error_login: "Échec de la connexion : ",
+                auth_error_register: "Échec de l'inscription : ",
+                auth_error_reset: "Échec de la réinitialisation du mot de passe : "
+            }
+        };
+
+        let currentLanguage = 'en'; // Lingua predefinita dell'app
+        let currentTheme = 'dark'; // Tema predefinito è scuro
+        // Le variabili chatHistory e selectedChatbotLanguage sono già dichiarate all'inizio del file.
+
+        // Funzione per applicare le traduzioni
+        function applyTranslations(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            // Aggiorna placeholder input chatbot
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.placeholder = translations[lang].chatbot_input_placeholder;
+            }
+            currentLanguage = lang;
+        }
+
+        // --- Funzioni di utilità ---
+        function showPage(pageId) {
+            console.log(`Showing page: ${pageId}`); // Debug log
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(pageId)?.classList.remove('hidden'); // Use optional chaining
+            // Il pannello delle impostazioni è stato rimosso, quindi non c'è bisogno di gestirlo qui
+        }
+
+        function getContrastTextColor(hexColor) {
+            const r = parseInt(hexColor.substring(1, 3), 16);
+            const g = parseInt(hexColor.substring(3, 5), 16);
+            const b = parseInt(hexColor.substring(5, 7), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#333' : '#f0f0f0'; // Grigio scuro per sfondi chiari, grigio chiaro per sfondi scuri
+        }
+
+        function applyGradient(color1, color2, direction) {
+            document.body.style.background = `linear-gradient(${direction}deg, ${color1}, ${color2})`;
+            const textColor = getContrastTextColor(color1); // Usa il primo colore per la decisione del contrasto del testo
+
+            // Applica il colore del testo agli elementi all'interno dei contenitori di vetro
+            document.querySelectorAll('.glass-container h1, .glass-container h2, .glass-container h3, .glass-container p, .glass-container input, .glass-container textarea, .glass-container select').forEach(el => {
+                el.style.color = textColor;
+            });
+            // Il colore del testo dei pulsanti si adatta al tema
+            document.querySelectorAll('.link-button, .merch-button').forEach(el => {
+                el.style.color = currentTheme === 'dark' ? '#f0f0f0' : '#333';
+            });
+        }
+
+        // --- Toggle Tema ---
+        function toggleTheme() {
+            console.log("Toggling theme..."); // Debug log
+            if (currentTheme === 'dark') {
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+                currentTheme = 'light';
+                applyGradient('#a7bfe8', '#6190e8', 135); // Apply default light gradient
+            } else {
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+                currentTheme = 'dark';
+                applyGradient('#1a202c', '#2d3748', 135); // Apply default dark gradient
+            }
+            localStorage.setItem('theme', currentTheme);
+            updateThemeIcon();
+
+            // Aggiorna la classe della modale di autenticazione per il tema
+            const authModalContent = document.querySelector('.auth-modal-content');
+            if (authModalContent) {
+                authModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
+            }
+            // Aggiorna la classe della chatbot modal per il tema
+            const chatModalContent = document.querySelector('.chatbot-modal-content');
+            if (chatModalContent) {
+                chatModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
+            }
+        }
+
+        function updateThemeIcon() {
+            const themeIcon = document.getElementById('theme-toggle-icon');
+            if (themeIcon) { // Check if element exists
+                if (currentTheme === 'dark') {
+                    themeIcon.textContent = SUN_EMOJI; // Icona Sole per la dark mode
+                } else {
+                    themeIcon.textContent = MOON_EMOJI; // Icona Luna per la light mode
+                }
+            }
+        }
+
+        // --- Casella Messaggi (sostituisce alert/confirm) ---
+        function showMessageBox(message, type = 'alert', onConfirm = null) {
+            console.log(`Showing message box: ${message} (Type: ${type})`); // Debug log
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-box-text');
+            const okButton = document.getElementById('message-box-ok');
+            const cancelButton = document.getElementById('message-box-cancel');
+
+            if (!messageBox || !messageText || !okButton || !cancelButton) {
+                console.error("One or more message box elements not found.");
+                return;
+            }
+
+            messageText.textContent = message;
+            okButton.textContent = translations[currentLanguage].message_box_ok;
+            cancelButton.textContent = translations[currentLanguage].message_box_cancel;
+
+            if (type === 'confirm') {
+                cancelButton.classList.remove('hidden');
+                okButton.onclick = () => {
+                    messageBox.classList.add('hidden');
+                    if (onConfirm) onConfirm(true);
+                };
+                cancelButton.onclick = () => {
+                    messageBox.classList.add('hidden');
+                    if (onConfirm) onConfirm(false);
+                };
+            } else { // 'alert'
+                cancelButton.classList.add('hidden');
+                okButton.onclick = () => {
+                    messageBox.classList.add('hidden');
+                };
+            }
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('message-box-active'); // Aggiungi classe per animazione
+
+            // Aggiorna il tema della message box
+            const messageBoxContent = document.querySelector('.message-box-content');
+            if (messageBoxContent) {
+                messageBoxContent.classList.toggle('dark-mode-message-box', currentTheme === 'dark');
+            }
+        }
+
+        // --- Logica Autenticazione Supabase e Database ---
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Supabase auth state changed:", event, session); // Debug log
+            if (session?.user) {
+                currentUserId = session.user.id;
+                isAuthReady = true;
+                const currentUserDisplay = document.getElementById('current-user-id-display');
+                const dashboardUserDisplay = document.getElementById('dashboard-user-id-display');
+                const logoutButton = document.getElementById('logout-button');
+
+                if (currentUserDisplay) currentUserDisplay.textContent = currentUserId;
+                if (dashboardUserDisplay) dashboardUserDisplay.textContent = currentUserId;
+                if (logoutButton) logoutButton.classList.remove('hidden');
+                console.log("Utente loggato (Supabase):", currentUserId);
+
+                // Controlla se una pagina specifica è richiesta tramite URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const pageId = urlParams.get('pageId');
+                if (pageId) {
+                    await loadAboutMePage(pageId);
+                } else {
+                    await loadDashboard();
+                }
+            } else {
+                currentUserId = null;
+                isAuthReady = true;
+                const currentUserDisplay = document.getElementById('current-user-id-display');
+                const dashboardUserDisplay = document.getElementById('dashboard-user-id-display');
+                const logoutButton = document.getElementById('logout-button');
+
+                if (currentUserDisplay) currentUserDisplay.textContent = 'N/A';
+                if (dashboardUserDisplay) dashboardUserDisplay.textContent = 'N/A';
+                if (logoutButton) logoutButton.classList.add('hidden');
+                console.log("Nessun utente loggato. Mostra la pagina di atterraggio.");
+                showPage('landing-page');
+            }
+            applyTranslations(currentLanguage); // Applica le traduzioni dopo che l'autenticazione è pronta
+        });
+
+        document.getElementById('signin-button')?.addEventListener('click', () => {
+            console.log("Sign In / Register button clicked."); // Debug log
+            showAuthModal('login');
+        });
+
+        async function saveAboutMePage(pageData, pageId = null) {
+            console.log("Attempting to save page. Page ID:", pageId); // Debug log
+            if (!isAuthReady || !currentUserId) {
+                showMessageBox("Autenticazione non pronta. Riprova.");
+                return null;
+            }
+
+            try {
+                let response;
+                if (pageId) {
+                    // Aggiorna pagina esistente
+                    response = await supabase
+                        .from('aboutMePages')
+                        .update(pageData)
+                        .eq('id', pageId)
+                        .select(); // Aggiungi .select() per ottenere i dati aggiornati
+                    showMessageBox("Pagina aggiornata con successo!");
+                } else {
+                    // Crea nuova pagina
+                    response = await supabase
+                        .from('aboutMePages')
+                        .insert([{ ...pageData, user_id: currentUserId }]) // Aggiungi user_id
+                        .select(); // Aggiungi .select() per ottenere i dati inseriti
+                    showMessageBox("Pagina creata con successo!");
+                    pageId = response.data[0].id; // Ottieni l'ID del documento appena creato
+                }
+
+                if (response.error) throw response.error;
+
+                await loadDashboard(); // Aggiorna la dashboard dopo il salvataggio
+                return pageId;
+            } catch (e) {
+                console.error("Errore durante il salvataggio del documento: ", e);
+                showMessageBox(translations[currentLanguage].error_saving_page + e.message);
+                return null;
+            }
+        }
+
+        async function deleteAboutMePage(pageId) {
+            console.log("Attempting to delete page. Page ID:", pageId); // Debug log
+            if (!isAuthReady || !currentUserId) {
+                showMessageBox("Autenticazione non pronta. Riprova.");
+                return;
+            }
+
+            showMessageBox(translations[currentLanguage].confirm_delete, 'confirm', async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const { error } = await supabase
+                            .from('aboutMePages')
+                            .delete()
+                            .eq('id', pageId)
+                            .eq('user_id', currentUserId); // Assicurati che l'utente possa eliminare solo le proprie pagine
+                        if (error) throw error;
+                        showMessageBox("Pagina eliminata con successo!");
+                        await loadDashboard(); // Aggiorna la dashboard
+                    } catch (e) {
+                        console.error("Errore durante la rimozione del documento: ", e);
+                        showMessageBox(translations[currentLanguage].error_deleting_page + e.message);
+                    }
+                }
+            });
+        }
+
+        async function loadDashboard() {
+            console.log("Loading dashboard..."); // Debug log
+            showPage('dashboard-page');
+            const pagesListDiv = document.getElementById('dashboard-pages-list');
+            if (!pagesListDiv) {
+                console.error("Dashboard pages list element not found.");
+                return;
+            }
+            pagesListDiv.innerHTML = `<p class="text-gray-600 text-center" data-i18n="dashboard_no_pages">${translations[currentLanguage].dashboard_no_pages}</p>`; // Messaggio predefinito
+
+            if (!isAuthReady || !currentUserId) {
+                console.warn("Autenticazione non pronta o nessun utente per il caricamento della dashboard.");
+                return;
+            }
+
+            try {
+                // Fetch delle pagine dell'utente da Supabase
+                const { data, error } = await supabase
+                    .from('aboutMePages')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .order('createdAt', { ascending: false }); // Assumendo una colonna createdAt
+
+                if (error) throw error;
+
+                pagesListDiv.innerHTML = ''; // Pulisci l'elenco precedente
+                if (data.length === 0) {
+                    pagesListDiv.innerHTML = `<p class="text-gray-600 text-center" data-i18n="dashboard_no_pages">${translations[currentLanguage].dashboard_no_pages}</p>`;
+                } else {
+                    data.forEach((page) => {
+                        const pageId = page.id;
+                        const pageCard = `
+                            <div class="bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl p-4 shadow-md flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 md:space-x-4 border border-white border-opacity-30">
+                                <div class="flex-grow text-left">
+                                    <h4 class="text-xl font-semibold text-gray-800 dark:text-gray-100">${page.name || 'Pagina Senza Titolo'}</h4>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">${page.tagline || 'Nessuna tagline'}</p>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs mt-1">ID: ${pageId}</p>
+                                </div>
+                                <div class="flex flex-wrap justify-center md:justify-end gap-2">
+                                    <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 view-page-btn" data-page-id="${pageId}" data-i18n="dashboard_view">${translations[currentLanguage].dashboard_view}</button>
+                                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 edit-page-btn" data-page-id="${pageId}" data-i18n="dashboard_edit">${translations[currentLanguage].dashboard_edit}</button>
+                                    <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 delete-page-btn" data-page-id="${pageId}" data-i18n="dashboard_delete">${translations[currentLanguage].dashboard_delete}</button>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 copy-link-btn" data-page-id="${pageId}" data-i18n="dashboard_copy_link">${translations[currentLanguage].dashboard_copy_link}</button>
+                                </div>
+                            </div>
+                        `;
+                        pagesListDiv.insertAdjacentHTML('beforeend', pageCard);
+                    });
+
+                    // Collega i listener di eventi ai pulsanti appena creati
+                    pagesListDiv.querySelectorAll('.view-page-btn').forEach(button => {
+                        button.onclick = () => {
+                            console.log("View page button clicked. ID:", button.dataset.pageId); // Debug log
+                            const pageId = button.dataset.pageId;
+                            window.history.pushState({}, '', `?pageId=${pageId}`);
+                            loadAboutMePage(pageId);
+                        };
+                    });
+                    pagesListDiv.querySelectorAll('.edit-page-btn').forEach(button => {
+                        button.onclick = () => {
+                            console.log("Edit page button clicked. ID:", button.dataset.pageId); // Debug log
+                            const pageId = button.dataset.pageId;
+                            openCreateEditForm(pageId);
+                        };
+                    });
+                    pagesListDiv.querySelectorAll('.delete-page-btn').forEach(button => {
+                        button.onclick = () => {
+                            console.log("Delete page button clicked. ID:", button.dataset.pageId); // Debug log
+                            const pageId = button.dataset.pageId;
+                            deleteAboutMePage(pageId);
+                        };
+                    });
+                    pagesListDiv.querySelectorAll('.copy-link-btn').forEach(button => {
+                        button.onclick = () => {
+                            console.log("Copy link button clicked. ID:", button.dataset.pageId); // Debug log
+                            const pageId = button.dataset.pageId;
+                            // Genera il link assoluto per la condivisione
+                            const link = `${window.location.origin}${window.location.pathname}?pageId=${pageId}`;
+                            navigator.clipboard.writeText(link).then(() => {
+                                showMessageBox(translations[currentLanguage].dashboard_link_copied);
+                            }).catch(err => {
+                                console.error('Errore durante la copia del link: ', err);
+                                // Fallback per browser più vecchi o ambienti senza navigator.clipboard
+                                const tempInput = document.createElement('textarea');
+                                tempInput.value = link;
+                                document.body.appendChild(tempInput);
+                                tempInput.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(tempInput);
+                                showMessageBox(translations[currentLanguage].dashboard_link_copied + " (Copiato con fallback)");
+                            });
+                        };
+                    });
+                }
+                applyTranslations(currentLanguage); // Riapplica le traduzioni per gli elementi aggiunti dinamicamente
+            } catch (e) {
+                console.error("Errore durante il caricamento delle pagine della dashboard: ", e);
+                showMessageBox("Errore durante il caricamento delle pagine della dashboard: " + e.message);
+            }
+        }
+
+        async function loadAboutMePage(pageId) {
+            console.log("Loading AboutMe page for display. ID:", pageId); // Debug log
+            showPage('about-me-display-page');
+            // Il pannello delle impostazioni è stato rimosso, quindi non c'è bisogno di mostrarlo
+
+            // Se l'utente non è autenticato, prova a caricare la pagina in modalità pubblica
+            // Altrimenti, carica la pagina solo se l'utente è il proprietario
+            let pageQuery = supabase
+                .from('aboutMePages')
+                .select('*')
+                .eq('id', pageId);
+
+            if (currentUserId) {
+                pageQuery = pageQuery.eq('user_id', currentUserId);
+            }
+
+            try {
+                console.log(`Tentativo di caricare la pagina con ID: ${pageId} per l'utente: ${currentUserId || 'non autenticato'}`);
+                const { data: pageData, error } = await pageQuery.single();
+
+                if (error) {
+                    console.error("Errore Supabase durante il recupero della pagina:", error);
+                    showMessageBox(translations[currentLanguage].error_loading_page + (error.message || "Pagina non trovata o non autorizzata."));
+                    showPage('landing-page'); // Torna alla landing page in caso di errore o accesso non autorizzato
+                    return;
+                }
+
+                if (pageData) {
+                    console.log("Dati pagina caricati con successo:", pageData);
+
+                    // Popola la sezione About Me
+                    const displayProfileImg = document.getElementById('display-profile-img');
+                    const displayName = document.getElementById('display-name');
+                    const displayTagline = document.getElementById('display-tagline');
+                    const displayAboutMeDescription = document.getElementById('display-about-me-description');
+
+                    if (displayProfileImg) displayProfileImg.src = pageData.profileImgUrl || "https://placehold.co/140x140/6190e8/ffffff?text=Profile";
+                    if (displayName) displayName.textContent = pageData.name || translations[currentLanguage].name;
+                    if (displayTagline) displayTagline.textContent = pageData.tagline || translations[currentLanguage].tagline;
+                    if (displayAboutMeDescription) displayAboutMeDescription.textContent = pageData.aboutMeDescription || translations[currentLanguage].about_me_description;
+
+                    // Popola la sezione Link (gestione JSONB)
+                    const linksContainer = document.getElementById('display-links-container');
+                    if (linksContainer) linksContainer.innerHTML = '';
+                    if (pageData.links && pageData.links.length > 0) {
+                        pageData.links.forEach(link => {
+                            const linkHtml = `
+                                <a href="${link.url}" target="_blank" class="link-button">
+                                    ${link.name}
+                                </a>
+                            `;
+                            if (linksContainer) linksContainer.insertAdjacentHTML('beforeend', linkHtml);
+                        });
+                    } else {
+                        if (linksContainer) linksContainer.innerHTML = `<p class="text-gray-600 dark:text-gray-300 text-center">Nessun link aggiunto.</p>`;
+                    }
+
+                    // Popola la sezione Merch (gestione JSONB)
+                    const merchContainer = document.getElementById('display-merch-container');
+                    if (merchContainer) merchContainer.innerHTML = '';
+                    if (pageData.merch && pageData.merch.length > 0) {
+                        pageData.merch.forEach(item => {
+                            const merchHtml = `
+                                <div class="merch-item text-left">
+                                    <img src="${item.imageUrl || 'https://placehold.co/300x180/a7bfe8/ffffff?text=Merch'}" alt="${item.name}" class="merch-img mb-3">
+                                    <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-1">${item.name}</h3>
+                                    <p class="text-gray-600 dark:text-gray-300 mb-3">${item.description}</p>
+                                    <a href="${item.buyLink}" target="_blank" class="merch-button text-sm">${translations[currentLanguage].merch_buy_now} (${item.price})</a>
+                                </div>
+                            `;
+                            if (merchContainer) merchContainer.insertAdjacentHTML('beforeend', merchHtml);
+                        });
+                    } else {
+                        if (merchContainer) merchContainer.innerHTML = `<p class="text-gray-600 dark:text-gray-300 text-center">Nessun articolo merch aggiunto.</p>`;
+                    }
+
+                    // Applica le impostazioni (lingua dell'app e gradiente di base)
+                    // Le impostazioni di gradiente e lingua della pagina non sono più persistenti nel DB per singola pagina
+                    // e sono controllate dal tema generale dell'app.
+                    applyGradient(
+                        currentTheme === 'dark' ? '#1a202c' : '#a7bfe8',
+                        currentTheme === 'dark' ? '#2d3748' : '#6190e8',
+                        135 // Direzione gradiente predefinita
+                    );
+                    applyTranslations(currentLanguage); // Applica la lingua dell'app
+                } else {
+                    console.log("Nessun documento trovato per l'ID specificato o per l'utente corrente.");
+                    showMessageBox(translations[currentLanguage].error_loading_page + "Pagina non trovata.");
+                    showPage('dashboard-page'); // Torna alla dashboard se la pagina non viene trovata
+                }
+            } catch (e) {
+                console.error("Errore durante il recupero del documento:", e);
+                showMessageBox(translations[currentLanguage].error_loading_page + e.message);
+                showPage('dashboard-page'); // Torna alla dashboard in caso di errore
+            }
+        }
+
+        let editingPageId = null; // Per tenere traccia se stiamo modificando o creando
+
+        // Funzione per impostare i listener di caricamento immagine per un'area specifica
+        async function uploadImageToSupabase(file, userId) {
+            console.log("Attempting to upload image for user:", userId); // Debug log
+            const fileName = `${userId}/${Date.now()}-${file.name}`;
+            try {
+                const { data, error } = await supabase.storage
+                    .from('profile-images') // Assicurati che questo bucket esista in Supabase Storage
+                    .upload(fileName, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (error) throw error;
+
+                const { data: publicUrlData } = supabase.storage
+                    .from('profile-images')
+                    .getPublicUrl(fileName);
+
+                if (publicUrlData && publicUrlData.publicUrl) {
+                    return publicUrlData.publicUrl;
+                } else {
+                    throw new Error("Impossibile ottenere l'URL pubblico dell'immagine.");
+                }
+            } catch (e) {
+                console.error("Errore durante il caricamento dell'immagine in Supabase:", e);
+                throw e; // Rilancia l'errore per gestirlo nel chiamante
+            }
+        }
+
+        function setupImageUpload(uploadAreaId, fileInputId, previewImgId, uploadTextId, hiddenUrlInputId) {
+            const uploadArea = document.getElementById(uploadAreaId);
+            const fileInput = document.getElementById(fileInputId);
+            const previewImg = document.getElementById(previewImgId);
+            const uploadText = document.getElementById(uploadTextId);
+            const hiddenUrlInput = document.getElementById(hiddenUrlInputId);
+
+            if (!uploadArea || !fileInput || !previewImg || !uploadText || !hiddenUrlInput) {
+                console.error("Elementi di caricamento immagine non trovati per ID:", { uploadAreaId, fileInputId, previewImgId, uploadTextId, hiddenUrlInputId });
+                return;
+            }
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Highlight drop area when dragging over
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.add('border-blue-500', 'bg-opacity-40'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('border-blue-500', 'bg-opacity-40'), false);
+            });
+
+            // Handle dropped files
+            uploadArea.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files), false);
+
+            // Handle file input click
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+            async function handleFiles(files) {
+                if (files.length === 0) return;
+
+                const file = files[0];
+                if (!file.type.startsWith('image/')) {
+                    showMessageBox("Si prega di caricare un file immagine valido.");
+                    return;
+                }
+
+                if (!currentUserId) {
+                    showMessageBox("Devi essere loggato per caricare immagini.");
+                    uploadText.textContent = translations[currentLanguage].form_profile_img_upload; // Reset text
+                    previewImg.src = "https://placehold.co/140x140/6190e8/ffffff?text=Image"; // Reset preview on error
+                    hiddenUrlInput.value = '';
+                    return;
+                }
+
+                uploadText.textContent = "Caricamento in corso...";
+                previewImg.src = "https://placehold.co/140x140/cccccc/333333?text=Loading...";
+
+                try {
+                    const publicUrl = await uploadImageToSupabase(file, currentUserId);
+                    hiddenUrlInput.value = publicUrl;
+                    previewImg.src = publicUrl;
+                    uploadText.textContent = translations[currentLanguage].upload_success;
+                    showMessageBox(translations[currentLanguage].upload_success);
+                } catch (e) {
+                    console.error("Errore durante il caricamento dell'immagine:", e);
+                    showMessageBox(translations[currentLanguage].upload_error + e.message);
+                    uploadText.textContent = translations[currentLanguage].form_profile_img_upload;
+                    previewImg.src = "https://placehold.co/140x140/6190e8/ffffff?text=Image"; // Reset preview on error
+                    hiddenUrlInput.value = '';
+                }
+            }
+        }
+
+
+        function openCreateEditForm(pageId = null) {
+            console.log("Opening create/edit form. Editing ID:", pageId); // Debug log
+            showPage('create-edit-form');
+            editingPageId = pageId;
+
+            const formTitle = document.getElementById('create-edit-form-title');
+            const nameInput = document.getElementById('form-name');
+            const taglineInput = document.getElementById('form-tagline');
+            const aboutMeInput = document.getElementById('form-about-me');
+            const profileImgPreview = document.getElementById('profile-img-preview');
+            const profileImgUploadText = document.getElementById('profile-img-upload-text');
+            const fileInput = document.getElementById('profile-img-file-input');
+            const profileImgUrlInput = document.getElementById('form-profile-img-url-hidden'); // Il campo URL nascosto
+
+            const linksContainer = document.getElementById('form-links-container');
+            const merchContainer = document.getElementById('form-merch-container');
+
+            // Pulisci il modulo
+            if (nameInput) nameInput.value = '';
+            if (taglineInput) taglineInput.value = '';
+            if (aboutMeInput) aboutMeInput.value = '';
+            if (profileImgUrlInput) profileImgUrlInput.value = ''; // Pulisci anche l'input URL nascosto
+            if (profileImgPreview) profileImgPreview.src = "https://placehold.co/140x140/6190e8/ffffff?text=Profile"; // Reset preview
+            if (profileImgUploadText) profileImgUploadText.textContent = translations[currentLanguage].form_profile_img_upload; // Reset text
+            if (fileInput) fileInput.value = ''; // Reset file input
+            if (linksContainer) linksContainer.innerHTML = '';
+            if (merchContainer) merchContainer.innerHTML = '';
+
+            if (pageId) {
+                if (formTitle) formTitle.textContent = translations[currentLanguage].create_edit_title_edit;
+                // Carica i dati per la modifica
+                supabase
+                    .from('aboutMePages')
+                    .select('*')
+                    .eq('id', pageId)
+                    .eq('user_id', currentUserId)
+                    .single()
+                    .then(({ data, error }) => {
+                        if (error) throw error;
+                        if (data) {
+                            if (nameInput) nameInput.value = data.name || '';
+                            if (taglineInput) taglineInput.value = data.tagline || '';
+                            if (aboutMeInput) aboutMeInput.value = data.aboutMeDescription || '';
+                            if (profileImgUrlInput) profileImgUrlInput.value = data.profileImgUrl || ''; // Imposta l'URL nascosto
+                            if (profileImgPreview) profileImgPreview.src = data.profileImgUrl || "https://placehold.co/140x140/6190e8/ffffff?text=Profile"; // Aggiorna preview
+                            if (profileImgUploadText) profileImgUploadText.textContent = data.profileImgUrl ? 'Immagine caricata' : translations[currentLanguage].form_profile_img_upload;
+
+
+                            if (data.links) {
+                                data.links.forEach(link => addLinkForm(link.name, link.url));
+                            }
+                            if (data.merch) {
+                                data.merch.forEach(item => addMerchForm(item.name, item.description, item.imageUrl, item.price, item.buyLink));
+                            }
+                        }
+                    })
+                    .catch(e => {
+                        console.error("Errore durante il caricamento della pagina per la modifica:", e);
+                        showMessageBox("Errore durante il caricamento della pagina per la modifica: " + e.message);
+                    });
+            } else {
+                if (formTitle) formTitle.textContent = translations[currentLanguage].create_edit_title_create;
+                // Aggiungi campi iniziali vuoti per la nuova pagina
+                addLinkForm();
+                addMerchForm();
+            }
+            applyTranslations(currentLanguage); // Riapplica le traduzioni per gli elementi del modulo
+        }
+
+        function addLinkForm(name = '', url = '') {
+            console.log("Adding link form."); // Debug log
+            const container = document.getElementById('form-links-container');
+            if (!container) {
+                console.error("Links container not found.");
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'flex flex-col md:flex-row gap-2 mb-2';
+            div.innerHTML = `
+                <input type="text" placeholder="${translations[currentLanguage].form_links_title.split('(')[0].trim()} Nome" value="${name}" class="link-name-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 flex-grow dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
+                <input type="url" placeholder="${translations[currentLanguage].form_links_title.split('(')[0].trim()} URL" value="${url}" class="link-url-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 flex-grow dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
+                <button class="remove-link-btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition duration-200">X</button>
+            `;
+            container.appendChild(div);
+            div.querySelector('.remove-link-btn')?.addEventListener('click', () => { // Use optional chaining for safety
+                console.log("Remove link button clicked."); // Debug log
+                div.remove();
+            });
+        }
+
+        function addMerchForm(name = '', description = '', imageUrl = '', price = '', buyLink = '') {
+            console.log("Adding merch form."); // Debug log
+            const container = document.getElementById('form-merch-container');
+            if (!container) {
+                console.error("Merch container not found.");
+                return;
+            }
+            const div = document.createElement('div');
+            const uniqueId = Date.now() + Math.random().toString(36).substring(2, 9); // Unique ID for each merch item's image elements
+            div.className = 'flex flex-col gap-2 mb-4 p-3 border border-white border-opacity-40 rounded-lg bg-white bg-opacity-20 dark:bg-gray-800 dark:bg-opacity-20 dark:border-gray-700';
+            div.innerHTML = `
+                <input type="text" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Nome" value="${name}" class="merch-name-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
+                <textarea placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Descrizione" class="merch-desc-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 h-20 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">${description}</textarea>
+
+                <div id="merch-img-upload-area-${uniqueId}" class="upload-area mt-2">
+                    <img id="merch-img-preview-${uniqueId}" src="${imageUrl || 'https://placehold.co/140x140/6190e8/ffffff?text=Merch'}" alt="Merch Image Preview">
+                    <p id="merch-img-upload-text-${uniqueId}" class="text-gray-600 dark:text-gray-300">${translations[currentLanguage].form_profile_img_upload}</p>
+                    <input type="file" id="merch-img-file-input-${uniqueId}" accept="image/*" class="hidden">
+                </div>
+                <input type="hidden" id="merch-img-url-hidden-${uniqueId}" value="${imageUrl}"> <!-- Hidden input for URL -->
+
+                <input type="text" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Prezzo (es. $25)" value="${price}" class="merch-price-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
+                <input type="url" placeholder="${translations[currentLanguage].form_merch_title.split('(')[0].trim()} Link Acquisto" value="${buyLink}" class="merch-buy-link-input p-2 rounded-lg bg-white bg-opacity-30 border border-white border-opacity-40 dark:bg-gray-700 dark:bg-opacity-30 dark:border-gray-600 dark:text-gray-100">
+                <button class="remove-merch-btn bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition duration-200 self-end">X</button>
+            `;
+            container.appendChild(div);
+            div.querySelector('.remove-merch-btn')?.addEventListener('click', () => { // Use optional chaining for safety
+                console.log("Remove merch button clicked."); // Debug log
+                div.remove();
+            });
+
+            // Setup image upload for this new merch item
+            setupImageUpload(
+                `merch-img-upload-area-${uniqueId}`,
+                `merch-img-file-input-${uniqueId}`,
+                `merch-img-preview-${uniqueId}`,
+                `merch-img-upload-text-${uniqueId}`,
+                `merch-img-url-hidden-${uniqueId}`
+            );
+        }
+
+        document.getElementById('form-add-link-btn')?.addEventListener('click', () => {
+            console.log("Add link button clicked."); // Debug log
+            addLinkForm();
+        });
+        document.getElementById('form-add-merch-btn')?.addEventListener('click', () => {
+            console.log("Add merch button clicked."); // Debug log
+            addMerchForm();
+        });
+
+        document.getElementById('form-save-btn')?.addEventListener('click', async () => {
+            console.log("Save page button clicked."); // Debug log
+            const name = document.getElementById('form-name')?.value;
+            const tagline = document.getElementById('form-tagline')?.value;
+            const aboutMeDescription = document.getElementById('form-about-me')?.value;
+            const profileImgUrl = document.getElementById('form-profile-img-url-hidden')?.value; // Ottieni l'URL dall'input nascosto
+
+            const links = [];
+            document.querySelectorAll('#form-links-container > div').forEach(div => {
+                const nameInput = div.querySelector('.link-name-input');
+                const urlInput = div.querySelector('.link-url-input');
+                if (nameInput && urlInput) { // Ensure elements exist
+                    const name = nameInput.value;
+                    const url = urlInput.value;
+                    if (name && url) links.push({ name, url });
+                }
+            });
+
+            const merch = [];
+            document.querySelectorAll('#form-merch-container > div').forEach(div => {
+                const nameInput = div.querySelector('.merch-name-input');
+                const descInput = div.querySelector('.merch-desc-input');
+                const imageUrlInput = div.querySelector('input[type="hidden"]');
+                const priceInput = div.querySelector('.merch-price-input');
+                const buyLinkInput = div.querySelector('.merch-buy-link-input');
+
+                if (nameInput && descInput && imageUrlInput && priceInput && buyLinkInput) { // Ensure elements exist
+                    const name = nameInput.value;
+                    const description = descInput.value;
+                    const imageUrl = imageUrlInput.value;
+                    const price = priceInput.value;
+                    const buyLink = buyLinkInput.value;
+                    if (name) merch.push({ name, description, imageUrl, price, buyLink });
+                }
+            });
+
+            const pageData = {
+                name,
+                tagline,
+                aboutMeDescription,
+                profileImgUrl,
+                links,
+                merch
+                // Le impostazioni di lingua e gradiente non sono più salvate per pagina
+            };
+
+            const savedPageId = await saveAboutMePage(pageData, editingPageId);
+            if (savedPageId) {
+                // Opzionalmente reindirizza alla pagina appena creata/modificata o torna alla dashboard
+                await loadDashboard();
+            }
+        });
+
+        document.getElementById('form-cancel-btn')?.addEventListener('click', () => {
+            console.log("Cancel form button clicked."); // Debug log
+            loadDashboard();
+        });
+
+        document.getElementById('dashboard-create-new-btn')?.addEventListener('click', () => {
+            console.log("Create New AboutMe Page button clicked."); // Debug log
+            openCreateEditForm();
+        });
+
+        // --- Logica Modale Autenticazione ---
+        const authModal = document.getElementById('auth-modal');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const forgotPasswordForm = document.getElementById('forgot-password-form'); // Corrected typo here
+        const authModalTitle = document.getElementById('auth-modal-title');
+        const authMessage = document.getElementById('auth-message');
+
+        function showAuthModal(formType) {
+            console.log("Showing auth modal. Form type:", formType); // Debug log
+            if (authModal) authModal.classList.remove('hidden');
+            if (authModal) authModal.classList.add('auth-modal-active'); // Aggiungi classe per animazione
+            // Aggiorna la classe della modale di autenticazione per il tema corrente
+            const authModalContent = document.querySelector('.auth-modal-content');
+            if (authModalContent) {
+                authModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
+            }
+
+            if (authMessage) authMessage.textContent = ''; // Pulisci i messaggi precedenti
+            if (document.getElementById('auth-email')) document.getElementById('auth-email').value = '';
+            if (document.getElementById('auth-password')) document.getElementById('auth-password').value = '';
+            if (document.getElementById('auth-forgot-email')) document.getElementById('auth-forgot-email').value = '';
+            // Resetta i campi email e password del form di registrazione
+            if (document.getElementById('auth-email-register')) document.getElementById('auth-email-register').value = '';
+            if (document.getElementById('auth-password-register')) document.getElementById('auth-password-register').value = '';
+            if (document.getElementById('auth-confirm-password-register')) document.getElementById('auth-confirm-password-register').value = ''; // Resetta anche la conferma password
+            if (document.getElementById('password-match-message')) document.getElementById('password-match-message').textContent = ''; // Pulisci il messaggio di corrispondenza password
+
+            // Resetta la visibilità delle password e la variabile di tracciamento
+            resetPasswordVisibility();
+
+            if (loginForm) loginForm.classList.add('hidden');
+            if (registerForm) registerForm.classList.add('hidden');
+            if (forgotPasswordForm) forgotPasswordForm.classList.add('hidden');
+
+            if (formType === 'login') {
+                if (loginForm) loginForm.classList.remove('hidden');
+                if (authModalTitle) authModalTitle.textContent = translations[currentLanguage].auth_modal_title_login;
+            } else if (formType === 'register') {
+                if (registerForm) registerForm.classList.remove('hidden');
+                if (authModalTitle) authModalTitle.textContent = translations[currentLanguage].auth_modal_title_register;
+            } else if (formType === 'forgot') {
+                if (forgotPasswordForm) forgotPasswordForm.classList.remove('hidden');
+                if (authModalTitle) authModalTitle.textContent = translations[currentLanguage].auth_modal_title_forgot;
+            }
+            applyTranslations(currentLanguage); // Riapplica le traduzioni per il contenuto della modale
+        }
+
+        document.getElementById('auth-modal-close')?.addEventListener('click', () => {
+            console.log("Auth modal close button clicked."); // Debug log
+            if (authModal) authModal.classList.add('hidden');
+            if (authModal) authModal.classList.remove('auth-modal-active'); // Rimuovi classe per animazione
+            resetPasswordVisibility(); // Resetta la visibilità delle password alla chiusura
+        });
+
+        document.getElementById('go-to-register')?.addEventListener('click', () => {
+            console.log("Go to register link clicked."); // Debug log
+            showAuthModal('register');
+        });
+        document.getElementById('go-to-login')?.addEventListener('click', () => {
+            console.log("Go to login link clicked."); // Debug log
+            showAuthModal('login');
+        });
+        document.getElementById('forgot-password-link')?.addEventListener('click', () => {
+            console.log("Forgot password link clicked."); // Debug log
+            showAuthModal('forgot');
+        });
+        document.getElementById('go-to-login-from-forgot')?.addEventListener('click', () => {
+            console.log("Go to login from forgot password link clicked."); // Debug log
+            showAuthModal('login');
+        });
+
+        // Funzione per resettare la visibilità di tutte le password
+        function resetPasswordVisibility() {
+            document.querySelectorAll('.password-input').forEach(input => {
+                input.type = 'password';
+            });
+            document.querySelectorAll('.toggle-password-btn').forEach(button => {
+                button.innerHTML = EYE_OPEN_SVG; // Reset all buttons to eye open
+            });
+            currentlyVisiblePasswordInputId = null;
+        }
+
+        // Funzione universale per mostrare/nascondere la password
+        function togglePasswordVisibility(inputElementId, buttonElementId) {
+            const inputElement = document.getElementById(inputElementId);
+            const buttonElement = document.getElementById(buttonElementId);
+
+            if (!inputElement || !buttonElement) { // Ensure elements exist
+                console.error(`Password toggle elements not found for ID: ${inputElementId}, ${buttonElementId}`);
+                return;
+            }
+
+            if (currentlyVisiblePasswordInputId === inputElementId) {
+                // Se è la stessa password già visibile, nascondila
+                inputElement.type = 'password';
+                buttonElement.innerHTML = EYE_OPEN_SVG;
+                currentlyVisiblePasswordInputId = null;
+            } else {
+                // Se c'è un'altra password visibile, nascondila prima
+                if (currentlyVisiblePasswordInputId) {
+                    const prevInput = document.getElementById(currentlyVisiblePasswordInputId);
+                    // Trova il pulsante associato all'input precedentemente visibile
+                    let prevButton = null;
+                    if (currentlyVisiblePasswordInputId === 'auth-password') {
+                        prevButton = document.getElementById('toggle-password-login');
+                    } else if (currentlyVisiblePasswordInputId === 'auth-password-register') {
+                        prevButton = document.getElementById('toggle-password-register');
+                    } else if (currentlyVisiblePasswordInputId === 'auth-confirm-password-register') {
+                        prevButton = document.getElementById('toggle-confirm-password-register');
+                    }
+
+                    if (prevInput && prevButton) {
+                        prevInput.type = 'password';
+                        prevButton.innerHTML = EYE_OPEN_SVG;
+                    }
+                }
+                // Mostra la nuova password
+                inputElement.type = 'text';
+                buttonElement.innerHTML = EYE_CLOSED_SVG;
+                currentlyVisiblePasswordInputId = inputElementId;
+            }
+        }
+
+        // Event Listeners per i pulsanti mostra/nascondi password
+        document.getElementById('toggle-password-login')?.addEventListener('click', () => {
+            console.log("Toggle password login button clicked."); // Debug log
+            togglePasswordVisibility('auth-password', 'toggle-password-login');
+        });
+        document.getElementById('toggle-password-register')?.addEventListener('click', () => {
+            console.log("Toggle password register button clicked."); // Debug log
+            togglePasswordVisibility('auth-password-register', 'toggle-password-register');
+        });
+        document.getElementById('toggle-confirm-password-register')?.addEventListener('click', () => {
+            console.log("Toggle confirm password register button clicked."); // Debug log
+            togglePasswordVisibility('auth-confirm-password-register', 'toggle-confirm-password-register');
+        });
+
+
+        document.getElementById('login-button')?.addEventListener('click', async () => {
+            console.log("Login button clicked."); // Debug log
+            const emailInput = document.getElementById('auth-email');
+            const passwordInput = document.getElementById('auth-password');
+            if (!emailInput || !passwordInput) {
+                console.error("Email or password input for login not found.");
+                return;
+            }
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                if (authModal) authModal.classList.add('hidden');
+                if (authModal) authModal.classList.remove('auth-modal-active');
+                showMessageBox("Accesso effettuato con successo!");
+            } catch (error) {
+                console.error("Errore di accesso:", error);
+                if (authMessage) authMessage.textContent = translations[currentLanguage].auth_error_login + error.message;
+            }
+        });
+
+        // Funzione per controllare la corrispondenza delle password (Registrazione)
+        const passwordRegister = document.getElementById('auth-password-register');
+        const confirmPasswordRegister = document.getElementById('auth-confirm-password-register');
+        const passwordMatchMessage = document.getElementById('password-match-message');
+
+        function checkPasswordsMatch() {
+            if (!passwordRegister || !confirmPasswordRegister || !passwordMatchMessage) {
+                console.error("Password match elements not found.");
+                return false;
+            }
+            if (passwordRegister.value === '' && confirmPasswordRegister.value === '') {
+                passwordMatchMessage.textContent = '';
+                passwordMatchMessage.className = '';
+                return false;
+            }
+            if (passwordRegister.value === confirmPasswordRegister.value) {
+                passwordMatchMessage.textContent = translations[currentLanguage].auth_passwords_match;
+                passwordMatchMessage.className = 'text-green-500 text-sm mt-2';
+                return true;
+            } else {
+                passwordMatchMessage.textContent = translations[currentLanguage].auth_passwords_no_match;
+                passwordMatchMessage.className = 'text-red-500 text-sm mt-2';
+                return false;
+            }
+        }
+
+        passwordRegister?.addEventListener('input', checkPasswordsMatch);
+        confirmPasswordRegister?.addEventListener('input', checkPasswordsMatch);
+
+
+        document.getElementById('register-button')?.addEventListener('click', async () => {
+            console.log("Register button clicked."); // Debug log
+            const emailInput = document.getElementById('auth-email-register');
+            const passwordInput = document.getElementById('auth-password-register');
+
+            if (!emailInput || !passwordInput) {
+                console.error("Email or password input for register not found.");
+                return;
+            }
+
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            if (!checkPasswordsMatch()) {
+                if (authMessage) authMessage.textContent = translations[currentLanguage].auth_passwords_no_match;
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) throw error;
+                if (authModal) authModal.classList.add('hidden');
+                if (authModal) authModal.classList.remove('auth-modal-active');
+                showMessageBox("Registrazione effettuata con successo! Ora sei loggato.");
+            } catch (error) {
+                console.error("Errore di registrazione:", error);
+                if (authMessage) authMessage.textContent = translations[currentLanguage].auth_error_register + error.message;
+            }
+        });
+
+        document.getElementById('reset-password-button')?.addEventListener('click', async () => {
+            console.log("Reset password button clicked."); // Debug log
+            const emailInput = document.getElementById('auth-forgot-email');
+            if (!emailInput) {
+                console.error("Email input for forgot password not found.");
+                return;
+            }
+            const email = emailInput.value;
+            if (!email) {
+                if (authMessage) authMessage.textContent = "Inserisci il tuo indirizzo email.";
+                return;
+            }
+            try {
+                const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+                if (error) throw error;
+                if (authMessage) authMessage.textContent = translations[currentLanguage].auth_reset_email_sent;
+                // Opzionalmente, nascondi il modulo dopo un breve ritardo
+                setTimeout(() => {
+                    if (authModal) authModal.classList.add('hidden');
+                    if (authModal) authModal.classList.remove('auth-modal-active');
+                }, 3000);
+            } catch (error) {
+                console.error("Errore di reimpostazione password:", error);
+                if (authMessage) authMessage.textContent = translations[currentLanguage].auth_error_reset + error.message;
+            }
+        });
+
+        // Impedisci il comportamento predefinito del browser per il drag & drop sull'intera pagina
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        document.body.addEventListener('dragenter', preventDefaults, false);
+        document.body.addEventListener('dragover', preventDefaults, false);
+        document.body.addEventListener('dragleave', preventDefaults, false);
+        document.body.addEventListener('drop', preventDefaults, false);
+
+
+        // --- Chatbot AI Logic ---
+        function toggleChatbot() {
+            console.log("Toggling chatbot."); // Debug log
+            const chatbotModal = document.getElementById('chatbot-modal');
+            if (!chatbotModal) {
+                console.error("Chatbot modal element not found.");
+                return;
+            }
+            chatbotModal.classList.toggle('hidden');
+            chatbotModal.classList.toggle('chatbot-modal-active');
+            // Aggiorna la classe della chatbot modal per il tema corrente
+            const chatModalContent = document.querySelector('.chatbot-modal-content');
+            if (chatModalContent) {
+                chatModalContent.classList.toggle('light-mode-modal', currentTheme === 'light');
+            }
+            // Scrolla in basso quando si apre la chat
+            const chatMessages = document.getElementById('chat-messages');
+            if (!chatbotModal.classList.contains('hidden')) {
+                // Se la chat è aperta e la cronologia è vuota, invia il prompt iniziale per la lingua
+                if (chatHistory.length === 0) {
+                    appendMessage('ai', "Hello! I am your AboutMe AI Assistant. What language would you like me to respond in? (e.g., English, Italian, German, French)");
+                }
+                if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            applyTranslations(currentLanguage); // Applica le traduzioni per la chatbot (UI)
+        }
+
+        function appendMessage(sender, message) {
+            const chatMessages = document.getElementById('chat-messages');
+            if (!chatMessages) {
+                console.error("Chat messages container not found.");
+                return;
+            }
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('mb-2', 'p-2', 'rounded-lg', 'max-w-[80%]');
+
+            if (sender === 'user') {
+                messageElement.classList.add('bg-blue-500', 'text-white', 'self-end', 'ml-auto', 'rounded-br-none');
+            } else {
+                messageElement.classList.add('bg-gray-200', 'text-gray-800', 'self-start', 'mr-auto', 'rounded-bl-none');
+                // Adatta il colore del testo del messaggio AI al tema
+                if (currentTheme === 'dark') {
+                    messageElement.classList.remove('bg-gray-200', 'text-gray-800');
+                    messageElement.classList.add('bg-gray-700', 'text-gray-100');
+                }
+            }
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Scrolla in basso
+        }
+
+        async function sendMessageToGemini() {
+            console.log("Sending message to Gemini."); // Debug log
+            const chatInput = document.getElementById('chat-input');
+            if (!chatInput) {
+                console.error("Chat input element not found.");
+                return;
+            }
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            chatInput.value = ''; // Pulisci l'input
+
+            const loadingIndicator = document.getElementById('chatbot-loading');
+            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+
+            const lowerCaseMessage = message.toLowerCase();
+            // Expanded keywords for external queries
+            const externalSiteKeywords = [
+                "sito esterno", "altro sito", "link esterno", "ricerca web", "google", "wikipedia",
+                "trova su internet", "informazioni su", "cos'è", "dimmi di", "notizie su",
+                "qual è la capitale", "meteo", "ricetta", "storia di", "come si fa", "spiegami",
+                "what is", "tell me about", "news about", "capital of", "weather", "recipe", "history of", "how to", "explain" // Added English keywords
+            ];
+            if (externalSiteKeywords.some(keyword => lowerCaseMessage.includes(keyword))) {
+                appendMessage('ai', translations[currentLanguage].chatbot_external_query_response + ' ' + getRandomChatbotEmoji());
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+                return;
+            }
+
+            let geminiPrompt = message;
+            if (chatHistory.length === 0) { // Primo messaggio dell'utente, prova a rilevare la lingua
+                if (lowerCaseMessage.includes('italian') || lowerCaseMessage.includes('italiano')) {
+                    selectedChatbotLanguage = 'it';
+                } else if (lowerCaseMessage.includes('german') || lowerCaseMessage.includes('tedesco')) {
+                    selectedChatbotLanguage = 'de';
+                } else if (lowerCaseMessage.includes('french') || lowerCaseMessage.includes('francese')) {
+                    selectedChatbotLanguage = 'fr';
+                } else {
+                    selectedChatbotLanguage = 'en'; // Predefinito se non riconosciuto
+                }
+                // Aggiungi l'istruzione per risposte concise e specifiche del sito
+                geminiPrompt = `Rispondi in modo molto conciso e riassuntivo, esclusivamente su domande relative al sito "AboutMe" e alle sue funzionalità. Se la domanda non riguarda il sito, dichiara che non puoi rispondere. Rispondi in ${selectedChatbotLanguage === 'en' ? 'Inglese' : selectedChatbotLanguage === 'it' ? 'Italiano' : selectedChatbotLanguage === 'de' ? 'Tedesco' : 'Francese'}. Domanda: ${message}`;
+            } else {
+                // Per i messaggi successivi, assicurati che Gemini continui nella lingua selezionata e sia conciso e specifico del sito
+                geminiPrompt = `Continua la conversazione in modo molto conciso e riassuntivo, esclusivamente su domande relative al sito "AboutMe" e alle sue funzionalità. Se la domanda non riguarda il sito, dichiara che non puoi rispondere. Rispondi in ${selectedChatbotLanguage === 'en' ? 'Inglese' : selectedChatbotLanguage === 'it' ? 'Italiano' : selectedChatbotLanguage === 'de' ? 'Tedesco' : 'Francese'}. Domanda: ${message}`;
+            }
+
+            chatHistory.push({ role: "user", parts: [{ text: geminiPrompt }] }); // Aggiungi il prompt modificato alla cronologia
+
+            try {
+                const payload = { contents: chatHistory };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log("Gemini API response:", result); // Debug: Controlla la risposta di Gemini
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const aiResponse = result.candidates[0].content.parts[0].text;
+                    // Rimuovi eventuali asterischi dalla risposta di Gemini
+                    const cleanAiResponse = aiResponse.replace(/\*/g, '');
+                    appendMessage('ai', cleanAiResponse + ' ' + getRandomChatbotEmoji());
+                    chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                } else {
+                    appendMessage('ai', "Mi dispiace, non sono riuscito a generare una risposta. Riprova più tardi." + ' ' + getRandomChatbotEmoji());
+                    console.error("Risposta Gemini inattesa:", result);
+                }
+            } catch (error) {
+                console.error("Errore durante la chiamata all'API Gemini:", error);
+                appendMessage('ai', "Si è verificato un errore durante la comunicazione con l'assistente AI." + ' ' + getRandomChatbotEmoji());
+            } finally {
+                if (loadingIndicator) loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Caricamento iniziale del tema
+        window.onload = () => {
+            console.log("Window loaded. Initializing app."); // Debug log
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                currentTheme = savedTheme;
+                document.body.classList.add(`${currentTheme}-mode`);
+            } else {
+                // Predefinito in modalità scura se nessuna preferenza è salvata
+                document.body.classList.add('dark-mode');
+                currentTheme = 'dark';
+            }
+            updateThemeIcon(); // Imposta l'icona corretta in base al tema caricato
+            // Applica il gradiente iniziale predefinito in base al tema caricato
+            if (currentTheme === 'dark') {
+                applyGradient('#1a202c', '#2d3748', 135);
+            } else {
+                applyGradient('#a7bfe8', '#6190e8', 135);
+            }
+
+            // Aggiungi l'event listener per il pulsante del tema
+            document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+
+            // Aggiungi l'event listener per il pulsante di logout qui per assicurarti che il DOM sia caricato
+            document.getElementById('logout-button')?.addEventListener('click', async () => {
+                console.log("Logout button clicked."); // Debug: Conferma il click
+                try {
+                    console.log("Attempting to sign out with Supabase auth:", supabase.auth); // Debug: Controlla l'oggetto auth
+                    const { error } = await supabase.auth.signOut();
+                    if (error) {
+                        console.error("Supabase signOut error:", error); // Log di errore più specifico
+                        throw error;
+                    }
+                    showMessageBox("Disconnessione effettuata con successo!");
+                    showPage('landing-page');
+                    console.log("Logout successful, redirecting to landing page."); // Debug: Conferma il successo del logout
+                } catch (error) {
+                    console.error("Errore durante la disconnessione:", error);
+                    showMessageBox("Errore durante la disconnessione: " + error.message);
+                }
+            });
+
+            // Event listeners per il chatbot
+            document.getElementById('chatbot-toggle-btn')?.addEventListener('click', toggleChatbot);
+            document.getElementById('chatbot-close-btn')?.addEventListener('click', toggleChatbot);
+            document.getElementById('chat-send-btn')?.addEventListener('click', sendMessageToGemini);
+            document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessageToGemini();
+                }
+            });
+
+            // Setup per il caricamento dell'immagine del profilo principale
+            setupImageUpload(
+                'profile-img-upload-area',
+                'profile-img-file-input',
+                'profile-img-preview',
+                'profile-img-upload-text',
+                'form-profile-img-url-hidden'
+            );
+        };
+
+    </script>
 </body>
 </html>
